@@ -152,6 +152,14 @@
             border-left: 4px solid #0071e3;
         }
 
+        .success-card {
+            background-color: #f5f5f7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            border-left: 4px solid #34c759;
+        }
+
         .info-row {
             display: flex;
             justify-content: space-between;
@@ -251,7 +259,7 @@
         <div id="supplierPage" class="page">
             <!-- 管理員專屬：新增供應商與禮券（在此時綁定到期日模式） -->
             <div id="adminAddSection" class="admin-section" style="display: none;">
-                <h2>新增供應商與禮券 (管理員限權)</h2>
+                <h2>新增供應商與禮券 (管理員權限)</h2>
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="newSupplierName">1. 新增供應商名稱</label>
@@ -312,7 +320,7 @@
             </div>
         </div>
 
-        <!-- 3) 登記code 頁 (自動讀取禮券到期日規則，無須重複選擇) -->
+        <!-- 3) 登記code 頁 -->
         <div id="registerPage" class="page">
             <h2>登記新券碼 (管理員權限)</h2>
             <form id="registerForm" onsubmit="handleRegister(event)">
@@ -345,6 +353,35 @@
 
                 <button type="submit">確認登記並上傳同步</button>
             </form>
+
+            <!-- 專屬區塊：登記新券碼後只即時顯示本次登記資料 -->
+            <div id="recentRegisterSection" class="success-card" style="display: none;">
+                <h3 style="color: #34c759; margin-bottom: 12px; font-size: 16px;">✓ 券碼登記成功！本次登記資料如下：</h3>
+                <div class="info-row">
+                    <span>登記時間:</span>
+                    <strong id="recTime">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>供應商:</span>
+                    <strong id="recSupplier">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>禮券名稱:</span>
+                    <strong id="recGiftName">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>首 Code:</span>
+                    <strong id="recStartCode">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>尾 Code:</span>
+                    <strong id="recEndCode">-</strong>
+                </div>
+                <div class="info-row">
+                    <span>到期日:</span>
+                    <strong id="recExpiry">-</strong>
+                </div>
+            </div>
         </div>
 
         <!-- 4) 記錄所有的登記code頁 -->
@@ -373,22 +410,11 @@
     </div>
 
     <script>
-        // 成功更新為您指定的最新 Google Apps Script Web App 網址
+        // 後端 Google Apps Script Web App 網址
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFFE-1FzKiRDRiO4K_JV2J5azrYFWd4GWdTgJ_vZhXWnLiiGepF7mxoyU0lHDHguQU/exec';
 
-        // 初始本地備用配置結構
-        let suppliersData = {
-            "供應商a": [
-                { name: "A $50", rule: "12m_end" },
-                { name: "A $80", rule: "12m_end" },
-                { name: "A $100", rule: "12m_end" }
-            ],
-            "供應商B": [
-                { name: "B $50", rule: "13m_end" },
-                { name: "B $80", rule: "13m_end" },
-                { name: "B $100", rule: "13m_end" }
-            ]
-        };
+        // 記憶體中存放的資料結構（隨後端讀取覆蓋）
+        let suppliersData = {};
         let localRecords = [];
 
         let currentUser = null;
@@ -430,7 +456,7 @@
             return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         }
 
-        // 初始化所有下拉式選單元素
+        // 初始化選單元件
         function initDropdowns() {
             populateSelectWithOptions('supplierSelect', Object.keys(suppliersData));
             populateSelectWithOptions('belongSupplier', Object.keys(suppliersData));
@@ -473,7 +499,7 @@
             }
         }
 
-        // 在登記頁面上動態顯示當前被選中禮券的到期規則
+        // 顯示目前禮券對應的規則
         function showActiveRule() {
             const supplier = document.getElementById('regSupplierSelect').value;
             const giftName = document.getElementById('regGiftSelect').value;
@@ -487,7 +513,7 @@
             }
         }
 
-        // 切換系統分頁
+        // 切換分頁
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -505,7 +531,7 @@
             }
         }
 
-        // 統一入口登入判斷
+        // 登入判斷
         function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
@@ -529,38 +555,36 @@
             document.getElementById('loginPage').classList.remove('active');
             document.getElementById('navMenu').style.display = 'flex';
             
-            initDropdowns();
-            switchPage('supplierPage');
-            
+            // 先從 Google Sheet 下載取得其他人更新過的所有配置與歷史紀錄
             fetchDataFromGoogleSheet();
+            switchPage('supplierPage');
         }
 
-        // 登出表單重設
         function logout() {
             currentUser = null;
             isAdmin = false;
             document.getElementById('userInfo').innerText = '';
             document.getElementById('navMenu').style.display = 'none';
+            document.getElementById('recentRegisterSection').style.display = 'none';
             document.getElementById('loginForm').reset();
             switchPage('loginPage');
         }
 
-        // 新增供應商名冊
+        // 新增供應商並永久同步儲存
         function addSupplier() {
             const name = document.getElementById('newSupplierName').value.trim();
             if (!name) return;
             if (!suppliersData[name]) {
                 suppliersData[name] = [];
+                // 即時發送上傳，寫入試算表資料庫
                 uploadConfigToGoogleSheet();
-                initDropdowns();
                 document.getElementById('newSupplierName').value = '';
-                alert(`供應商 [${name}] 新增成功！`);
             } else {
                 alert('此供應商已被建立。');
             }
         }
 
-        // 新增禮券（繫結到期日計算規則）
+        // 新增禮券繫結規則並永久同步儲存
         function addGift() {
             const supplier = document.getElementById('belongSupplier').value;
             const giftName = document.getElementById('newGiftName').value.trim();
@@ -572,16 +596,15 @@
             
             if (!exists) {
                 suppliersData[supplier].push({ name: giftName, rule: rule });
+                // 即時發送上傳，寫入試算表資料庫，這樣其他人刷新或進入網站時即會看到
                 uploadConfigToGoogleSheet();
-                initDropdowns();
                 document.getElementById('newGiftName').value = '';
-                alert(`成功為 ${supplier} 新增禮券 [${giftName}] 且已繫結 [${ruleMapping[rule]}] 規則！`);
             } else {
                 alert('該供應商之下已存在相同名稱之禮券。');
             }
         }
 
-        // 動態檢視並渲染當前最新狀態面板
+        // 查詢最新券碼面板
         function loadQueryData() {
             const supplier = document.getElementById('supplierSelect').value;
             const gift = document.getElementById('giftSelect').value;
@@ -601,7 +624,7 @@
             }
         }
 
-        // 管理員提交券碼登記 (自動讀取該禮券設定的規則在背景計算)
+        // 管理員提交券碼登記
         function handleRegister(event) {
             event.preventDefault();
             
@@ -628,23 +651,32 @@
                 user: currentUser
             };
 
-            localRecords.unshift(newRecord); 
+            // 1. 同步上傳至雲端資料庫
             uploadRecordToGoogleSheet(newRecord);
 
-            document.getElementById('registerForm').reset();
-            updateGiftSelect('regSupplierSelect', 'regGiftSelect');
+            // 2. 留在原頁面，更新本次登记面板數據（不跳轉至所有登記紀錄頁）
+            document.getElementById('recTime').innerText = timestampStr;
+            document.getElementById('recSupplier').innerText = supplier;
+            document.getElementById('recGiftName').innerText = giftName;
+            document.getElementById('recStartCode').innerText = startCode;
+            document.getElementById('recEndCode').innerText = endCode;
+            document.getElementById('recExpiry').innerText = expiryDateStr;
             
-            alert(`登記完畢！\n系統已自動抓取該禮券的 [${ruleMapping[rule]}] 規則計算到期日為: ${expiryDateStr}`);
-            switchPage('recordsPage');
+            // 顯示當前只看最新一筆登記的區塊面板
+            document.getElementById('recentRegisterSection').style.display = 'block';
+
+            // 表單重設供連續登記使用
+            document.getElementById('regStart').value = '';
+            document.getElementById('regEnd').value = '';
         }
 
-        // 渲染整體歷史明細數據表格
+        // 渲染整體歷史數據表
         function renderRecordsTable() {
             const tbody = document.getElementById('recordsTableBody');
             tbody.innerHTML = '';
 
             if (localRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666666;">暫無數據，正在自後端下載同步或尚無任何登記明細...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666666;">暫無歷史數據</td></tr>';
                 return;
             }
 
@@ -663,8 +695,9 @@
             });
         }
 
-        // ================= Google Sheets 傳輸對接控制區塊 =================
+        // ================= Google Sheets 多人即時資料交換傳輸區塊 =================
 
+        // 提交券碼明細
         function uploadRecordToGoogleSheet(recordData) {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -672,37 +705,40 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'insertRecord', data: recordData })
             }).then(() => {
-                setTimeout(fetchDataFromGoogleSheet, 1200);
+                // 自動更新記憶體中的歷史名冊快照
+                localRecords.unshift(recordData);
             });
         }
 
+        // 永久儲存：新增供應商及禮券到雲端，這樣其他人開網頁即可共享看到
         function uploadConfigToGoogleSheet() {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'saveConfig', data: suppliersData })
+            }).then(() => {
+                // 本地重新刷新渲染選單
+                initDropdowns();
+                alert('系統已完成雲端同步！其他協同使用者將可即時共用此配置。');
             });
         }
 
+        // 讀取多人即時同步的所有資訊 (包含全體更新後的選單架構、券碼清單)
         function fetchDataFromGoogleSheet() {
             fetch(`${GOOGLE_SCRIPT_URL}?action=readAll`)
             .then(response => response.json())
             .then(res => {
                 if(res.config && Object.keys(res.config).length > 0) {
                     suppliersData = res.config;
-                    initDropdowns();
                 }
                 if(res.records) {
                     localRecords = res.records;
-                    renderRecordsTable();
-                    loadQueryData();
                 }
+                initDropdowns();
             })
             .catch(err => {
-                console.log("網路限制，採用本地預存數據渲染");
-                renderRecordsTable();
-                loadQueryData();
+                console.log("初始化同步連線異常或尚無任何配置資料");
             });
         }
     </script>
