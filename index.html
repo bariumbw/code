@@ -122,6 +122,16 @@
             background-color: #e8e8ed;
         }
 
+        button.success-btn {
+            background-color: #34c759;
+            color: #ffffff;
+            margin-top: 16px;
+        }
+
+        button.success-btn:hover {
+            background-color: #28a745;
+        }
+
         .nav-menu {
             display: flex;
             gap: 12px;
@@ -152,12 +162,12 @@
             border-left: 4px solid #0071e3;
         }
 
-        .success-card {
+        .preview-card {
             background-color: #f5f5f7;
             border-radius: 8px;
             padding: 16px;
             margin-top: 20px;
-            border-left: 4px solid #34c759;
+            border-left: 4px solid #ff9500;
         }
 
         .info-row {
@@ -334,7 +344,7 @@
         <!-- 3) 登記code 頁 -->
         <div id="registerPage" class="page">
             <h2>登記新券碼 (管理員權限)</h2>
-            <form id="registerForm" onsubmit="handleRegister(event)">
+            <form id="registerForm" onsubmit="handlePreview(event)">
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="regSupplierSelect">選擇供應商</label>
@@ -346,36 +356,30 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="background-color: #f5f5f7; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between;">
-                    <div>
-                        <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">預設到期規則: </span>
-                        <strong id="activeRuleText" style="color: #0071e3; font-size: 14px;">-</strong>
-                    </div>
-                    <div>
-                        <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">計算模式: </span>
-                        <strong id="activeCalcText" style="color: #0071e3; font-size: 14px;">-</strong>
-                    </div>
+                <div class="form-group" style="background-color: #f5f5f7; padding: 12px; border-radius: 8px;">
+                    <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">預設到期規則: </span>
+                    <strong id="activeRuleText" style="color: #0071e3; font-size: 14px;">-</strong>
                 </div>
                 
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="regStart">首 Code (例如: TA001 / TB0013)</label>
-                        <input type="text" id="regStart" required placeholder="請輸入首碼" oninput="this.value = this.value.toUpperCase()">
+                        <input type="text" id="regStart" required placeholder="請輸入首碼" oninput="this.value = this.value.toUpperCase(); hidePreviewCard();">
                     </div>
                     <div class="form-group">
                         <label for="regEnd">尾 Code (例如: TA005 / TB0056)</label>
-                        <input type="text" id="regEnd" required placeholder="請輸入尾碼" oninput="this.value = this.value.toUpperCase()">
+                        <input type="text" id="regEnd" required placeholder="請輸入尾碼" oninput="this.value = this.value.toUpperCase(); hidePreviewCard();">
                     </div>
                 </div>
 
-                <button type="submit">確認登記並上傳同步</button>
+                <button type="submit">計算並預覽詳細資訊</button>
             </form>
 
-            <!-- 即時顯示該次登記的詳細資訊區塊 -->
-            <div id="recentRegisterSection" class="success-card" style="display: none;">
-                <h3 style="color: #34c759; margin-bottom: 12px; font-size: 16px;">✓ 券碼登記成功！本次登記詳細資訊如下：</h3>
+            <!-- 先顯示詳細資訊，再由按鈕確認券碼登記 -->
+            <div id="recentRegisterSection" class="preview-card" style="display: none;">
+                <h3 style="color: #ff9500; margin-bottom: 12px; font-size: 16px;">請核對本次登記詳細資訊：</h3>
                 <div class="info-row">
-                    <span>登記時間:</span>
+                    <span>預計登記時間:</span>
                     <strong id="recTime">-</strong>
                 </div>
                 <div class="info-row">
@@ -402,6 +406,9 @@
                     <span>到期日:</span>
                     <strong id="recExpiry">-</strong>
                 </div>
+                
+                <!-- 確認登記提交按鈕 -->
+                <button type="button" class="success-btn" onclick="confirmAndSubmitRegister()">確認無誤，正式提交登記</button>
             </div>
         </div>
 
@@ -432,13 +439,13 @@
     </div>
 
     <script>
-        // 指定與您的 Google Sheet 對接的網路應用程式網址
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
 
         let suppliersData = {};
         let localRecords = [];
         let currentUser = null;
         let isAdmin = false;
+        let pendingRecord = null; // 用於暫存預覽中的資料
 
         const ruleMapping = {
             "12m_end": "12個月月底",
@@ -449,17 +456,11 @@
             "365d": "365日"
         };
 
-        const calcMapping = {
-            "normal": "正常計算法",
-            "suffix_ignore": "尾碼干擾法"
-        };
-
         // 自動解析編碼流水號並計算數量
         function calculateCodeCount(startCode, endCode, calcType) {
             let strA = startCode.trim().toUpperCase();
             let strB = endCode.trim().toUpperCase();
 
-            // 尾碼干擾模式下，剔除最後一個字元
             if (calcType === 'suffix_ignore') {
                 if (strA.length > 1) strA = strA.slice(0, -1);
                 if (strB.length > 1) strB = strB.slice(0, -1);
@@ -530,8 +531,7 @@
             gifts.forEach(giftObj => {
                 const el = document.createElement('option');
                 el.value = giftObj.name;
-                const calcLabel = calcMapping[giftObj.calcType] || '正常計算法';
-                el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'} / ${calcLabel})`;
+                el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'})`;
                 selectEl.appendChild(el);
             });
             
@@ -550,11 +550,15 @@
             
             if (found) {
                 document.getElementById('activeRuleText').innerText = ruleMapping[found.rule] || '未指定';
-                document.getElementById('activeCalcText').innerText = calcMapping[found.calcType] || '正常計算法';
             } else {
                 document.getElementById('activeRuleText').innerText = '-';
-                document.getElementById('activeCalcText').innerText = '-';
             }
+            hidePreviewCard();
+        }
+
+        function hidePreviewCard() {
+            document.getElementById('recentRegisterSection').style.display = 'none';
+            pendingRecord = null;
         }
 
         function switchPage(pageId) {
@@ -606,7 +610,7 @@
             isAdmin = false;
             document.getElementById('userInfo').innerText = '';
             document.getElementById('navMenu').style.display = 'none';
-            document.getElementById('recentRegisterSection').style.display = 'none';
+            hidePreviewCard();
             document.getElementById('loginForm').reset();
             switchPage('loginPage');
         }
@@ -663,7 +667,8 @@
             }
         }
 
-        function handleRegister(event) {
+        // 第一步：使用者輸入完畢，點擊計算後只先「顯示詳細資訊」
+        function handlePreview(event) {
             event.preventDefault();
             
             const supplier = document.getElementById('regSupplierSelect').value;
@@ -681,7 +686,8 @@
             const expiryDateStr = calculateExpiryDate(now, rule);
             const timestampStr = getFormattedTimestamp();
 
-            const newRecord = {
+            // 暫存資料於記憶體
+            pendingRecord = {
                 timestamp: timestampStr,
                 supplier: supplier,
                 giftName: giftName,
@@ -692,23 +698,32 @@
                 user: currentUser
             };
 
-            // 上傳同步至雲端試算表
-            uploadRecordToGoogleSheet(newRecord);
-
-            // 即時在當前登記頁面更新明細資訊
+            // 更新預覽區塊中的明細資訊
             document.getElementById('recTime').innerText = timestampStr;
             document.getElementById('recSupplier').innerText = supplier;
             document.getElementById('recGiftName').innerText = giftName;
             document.getElementById('recStartCode').innerText = startCode;
             document.getElementById('recEndCode').innerText = endCode;
-            document.getElementById('recCount').innerText = `${totalCount} 張 (採用 ${calcMapping[calcType]})`;
+            document.getElementById('recCount').innerText = `${totalCount} 張`;
             document.getElementById('recExpiry').innerText = expiryDateStr;
             
+            // 秀出預覽確認區塊
             document.getElementById('recentRegisterSection').style.display = 'block';
+        }
+
+        // 第二步：使用者點選按鈕「確認無誤，正式提交登記」
+        function confirmAndSubmitRegister() {
+            if (!pendingRecord) return;
+
+            // 正式同步上傳至雲端試算表
+            uploadRecordToGoogleSheet(pendingRecord);
+
+            alert('✓ 券碼登記已成功提交並完成雲端同步！');
 
             // 清空輸入框
             document.getElementById('regStart').value = '';
             document.getElementById('regEnd').value = '';
+            hidePreviewCard();
         }
 
         function renderRecordsTable() {
