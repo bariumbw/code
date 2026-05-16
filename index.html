@@ -257,7 +257,7 @@
 
         <!-- 2) 供應商頁 (新增與查詢) -->
         <div id="supplierPage" class="page">
-            <!-- 管理員專屬：新增供應商與禮券（配置到期日與計算規則） -->
+            <!-- 管理員專屬：新增供應商與禮券 -->
             <div id="adminAddSection" class="admin-section" style="display: none;">
                 <h2>新增供應商與禮券 (管理員權限)</h2>
                 <div class="grid-2">
@@ -371,9 +371,9 @@
                 <button type="submit">確認登記並上傳同步</button>
             </form>
 
-            <!-- 專屬區塊：登記新券碼後只即時顯示本次登記資料與自動計算的數量 -->
+            <!-- 即時顯示該次登記的詳細資訊區塊 -->
             <div id="recentRegisterSection" class="success-card" style="display: none;">
-                <h3 style="color: #34c759; margin-bottom: 12px; font-size: 16px;">✓ 券碼登記成功！本次登記資料如下：</h3>
+                <h3 style="color: #34c759; margin-bottom: 12px; font-size: 16px;">✓ 券碼登記成功！本次登記詳細資訊如下：</h3>
                 <div class="info-row">
                     <span>登記時間:</span>
                     <strong id="recTime">-</strong>
@@ -395,7 +395,7 @@
                     <strong id="recEndCode">-</strong>
                 </div>
                 <div class="info-row">
-                    <span>本次登記數量:</span>
+                    <span>數量:</span>
                     <strong id="recCount" style="color: #0071e3; font-size: 16px;">-</strong>
                 </div>
                 <div class="info-row">
@@ -405,7 +405,7 @@
             </div>
         </div>
 
-        <!-- 4) 記錄所有的登記code頁 -->
+        <!-- 4) 所有登記紀錄頁 -->
         <div id="recordsPage" class="page">
             <h2>所有登記歷史紀錄</h2>
             <div class="table-responsive">
@@ -417,8 +417,8 @@
                             <th>禮券名稱</th>
                             <th>首 Code</th>
                             <th>尾 Code</th>
-                            <th>數量</th>
                             <th>到期日</th>
+                            <th>數量</th>
                             <th>登記人</th>
                         </tr>
                     </thead>
@@ -432,13 +432,11 @@
     </div>
 
     <script>
-        // 後端 Google Apps Script Web App 網址
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFFE-1FzKiRDRiO4K_JV2J5azrYFWd4GWdTgJ_vZhXWnLiiGepF7mxoyU0lHDHguQU/exec';
+        // 指定與您的 Google Sheet 對接的網路應用程式網址
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
 
-        // 記憶體中存放的資料結構
         let suppliersData = {};
         let localRecords = [];
-
         let currentUser = null;
         let isAdmin = false;
 
@@ -456,18 +454,17 @@
             "suffix_ignore": "尾碼干擾法"
         };
 
-        // 自動解析英文字母與數字並計算數量的核心邏輯
+        // 自動解析編碼流水號並計算數量
         function calculateCodeCount(startCode, endCode, calcType) {
             let strA = startCode.trim().toUpperCase();
             let strB = endCode.trim().toUpperCase();
 
-            // 如果是尾碼干擾法，直接切掉最後一個字元
+            // 尾碼干擾模式下，剔除最後一個字元
             if (calcType === 'suffix_ignore') {
                 if (strA.length > 1) strA = strA.slice(0, -1);
                 if (strB.length > 1) strB = strB.slice(0, -1);
             }
 
-            // 提取出裡面的數字部分
             const numA = parseInt(strA.replace(/[^0-9]/g, ''), 10);
             const numB = parseInt(strB.replace(/[^0-9]/g, ''), 10);
 
@@ -478,7 +475,7 @@
             return Math.abs(numB - numA) + 1;
         }
 
-        // 計算到期日的核心邏輯
+        // 自動推算到期日
         function calculateExpiryDate(startDate, rule) {
             let year = startDate.getFullYear();
             let month = startDate.getMonth(); 
@@ -499,13 +496,11 @@
             return targetDate.toISOString().split('T')[0];
         }
 
-        // 格式化輸出目前系統時間
         function getFormattedTimestamp() {
             const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')} : ${String(now.getMinutes()).padStart(2,'0')} : ${String(now.getSeconds()).padStart(2,'0')}`;
+            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
         }
 
-        // 初始化選單元件
         function initDropdowns() {
             populateSelectWithOptions('supplierSelect', Object.keys(suppliersData));
             populateSelectWithOptions('belongSupplier', Object.keys(suppliersData));
@@ -526,18 +521,15 @@
             });
         }
 
-        // 更新禮券選單
         function updateGiftSelect(supplierSelectId, giftSelectId) {
             const supplierVal = document.getElementById(supplierSelectId).value;
             const gifts = suppliersData[supplierVal] || [];
-            
             const selectEl = document.getElementById(giftSelectId);
             selectEl.innerHTML = '';
             
             gifts.forEach(giftObj => {
                 const el = document.createElement('option');
                 el.value = giftObj.name;
-                // 擴充顯示內容，包含到期日規則與計算規則
                 const calcLabel = calcMapping[giftObj.calcType] || '正常計算法';
                 el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'} / ${calcLabel})`;
                 selectEl.appendChild(el);
@@ -550,7 +542,6 @@
             }
         }
 
-        // 顯示目前禮券對應的規則狀態
         function showActiveRule() {
             const supplier = document.getElementById('regSupplierSelect').value;
             const giftName = document.getElementById('regGiftSelect').value;
@@ -566,7 +557,6 @@
             }
         }
 
-        // 切換分頁
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
@@ -584,7 +574,6 @@
             }
         }
 
-        // 登入判斷
         function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
@@ -622,7 +611,6 @@
             switchPage('loginPage');
         }
 
-        // 新增供應商
         function addSupplier() {
             const name = document.getElementById('newSupplierName').value.trim();
             if (!name) return;
@@ -635,7 +623,6 @@
             }
         }
 
-        // 新增禮券（儲存名稱、到期日規則、Code計算規則）
         function addGift() {
             const supplier = document.getElementById('belongSupplier').value;
             const giftName = document.getElementById('newGiftName').value.trim();
@@ -647,7 +634,6 @@
             const exists = gifts.some(g => g.name === giftName);
             
             if (!exists) {
-                // 將計算模式 calcType 寫入配置資料中
                 suppliersData[supplier].push({ name: giftName, rule: rule, calcType: calcType });
                 uploadConfigToGoogleSheet();
                 document.getElementById('newGiftName').value = '';
@@ -656,7 +642,6 @@
             }
         }
 
-        // 查詢最新狀態區塊
         function loadQueryData() {
             const supplier = document.getElementById('supplierSelect').value;
             const gift = document.getElementById('giftSelect').value;
@@ -678,7 +663,6 @@
             }
         }
 
-        // 管理員提交券碼登記
         function handleRegister(event) {
             event.preventDefault();
             
@@ -692,9 +676,7 @@
             const rule = foundGift ? foundGift.rule : '12m_end'; 
             const calcType = foundGift ? foundGift.calcType : 'normal';
 
-            // 根據禮券設定的規則自動計算真正數量
             const totalCount = calculateCodeCount(startCode, endCode, calcType);
-
             const now = new Date();
             const expiryDateStr = calculateExpiryDate(now, rule);
             const timestampStr = getFormattedTimestamp();
@@ -705,15 +687,15 @@
                 giftName: giftName,
                 startCode: startCode,
                 endCode: endCode,
-                count: totalCount, // 儲存計算出的數量欄位
                 expiry: expiryDateStr,
+                count: totalCount,
                 user: currentUser
             };
 
-            // 1. 同步雲端試算表
+            // 上傳同步至雲端試算表
             uploadRecordToGoogleSheet(newRecord);
 
-            // 2. 保持在當前登記頁面，即時渲染更新本次登記面板的資料，絕不跳轉
+            // 即時在當前登記頁面更新明細資訊
             document.getElementById('recTime').innerText = timestampStr;
             document.getElementById('recSupplier').innerText = supplier;
             document.getElementById('recGiftName').innerText = giftName;
@@ -722,15 +704,13 @@
             document.getElementById('recCount').innerText = `${totalCount} 張 (採用 ${calcMapping[calcType]})`;
             document.getElementById('recExpiry').innerText = expiryDateStr;
             
-            // 開啟顯示獨立結果區塊
             document.getElementById('recentRegisterSection').style.display = 'block';
 
-            // 清空輸入框方便連續下一筆輸入
+            // 清空輸入框
             document.getElementById('regStart').value = '';
             document.getElementById('regEnd').value = '';
         }
 
-        // 渲染完整歷史數據列表表格
         function renderRecordsTable() {
             const tbody = document.getElementById('recordsTableBody');
             tbody.innerHTML = '';
@@ -748,15 +728,15 @@
                     <td>${record.giftName}</td>
                     <td>${record.startCode}</td>
                     <td>${record.endCode}</td>
-                    <td><strong>${record.count || 0}</strong></td>
                     <td>${record.expiry}</td>
+                    <td><strong>${record.count || 0}</strong></td>
                     <td>${record.user}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // ================= Google Sheets 多人資料互通雲端對接 =================
+        // ================= Google Sheets 數據同步 =================
 
         function uploadRecordToGoogleSheet(recordData) {
             fetch(GOOGLE_SCRIPT_URL, {
@@ -794,7 +774,7 @@
                 initDropdowns();
             })
             .catch(err => {
-                console.log("連線建立中或尚無任何配置資料");
+                console.log("正在同步資料或尚無配置紀錄");
             });
         }
     </script>
