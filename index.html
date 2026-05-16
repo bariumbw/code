@@ -257,7 +257,7 @@
 
         <!-- 2) 供應商頁 (新增與查詢) -->
         <div id="supplierPage" class="page">
-            <!-- 管理員專屬：新增供應商與禮券（在此時綁定到期日模式） -->
+            <!-- 管理員專屬：新增供應商與禮券（配置到期日與計算規則） -->
             <div id="adminAddSection" class="admin-section" style="display: none;">
                 <h2>新增供應商與禮券 (管理員權限)</h2>
                 <div class="grid-2">
@@ -282,6 +282,13 @@
                             <option value="24m_end">24個月月底</option>
                             <option value="365d">365日</option>
                         </select>
+
+                        <label for="newGiftCalcType" style="margin-top: 8px;">Code 計算方式</label>
+                        <select id="newGiftCalcType">
+                            <option value="normal">正常計算法 (首尾流水號相減)</option>
+                            <option value="suffix_ignore">尾碼干擾法 (自動忽略最後一位)</option>
+                        </select>
+                        
                         <button type="button" class="secondary" onclick="addGift()" style="margin-top: 12px;">確認新增禮券(繫結規則)</button>
                     </div>
                 </div>
@@ -310,6 +317,10 @@
                     <strong id="infoRange">-</strong>
                 </div>
                 <div class="info-row">
+                    <span>最後登記數量:</span>
+                    <strong id="infoCount">-</strong>
+                </div>
+                <div class="info-row">
                     <span>到期日:</span>
                     <strong id="infoExpiry">-</strong>
                 </div>
@@ -335,26 +346,32 @@
                     </div>
                 </div>
 
-                <div class="form-group" style="background-color: #f5f5f7; padding: 12px; border-radius: 8px;">
-                    <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">此禮券預設到期規則: </span>
-                    <strong id="activeRuleText" style="color: #0071e3; font-size: 14px;">-</strong>
+                <div class="form-group" style="background-color: #f5f5f7; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between;">
+                    <div>
+                        <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">預設到期規則: </span>
+                        <strong id="activeRuleText" style="color: #0071e3; font-size: 14px;">-</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">計算模式: </span>
+                        <strong id="activeCalcText" style="color: #0071e3; font-size: 14px;">-</strong>
+                    </div>
                 </div>
                 
                 <div class="grid-2">
                     <div class="form-group">
-                        <label for="regStart">首 Code (例如: TA001)</label>
-                        <input type="text" id="regStart" required placeholder="例如: TA001" oninput="this.value = this.value.toUpperCase()">
+                        <label for="regStart">首 Code (例如: TA001 / TB0013)</label>
+                        <input type="text" id="regStart" required placeholder="請輸入首碼" oninput="this.value = this.value.toUpperCase()">
                     </div>
                     <div class="form-group">
-                        <label for="regEnd">尾 Code (例如: TA500)</label>
-                        <input type="text" id="regEnd" required placeholder="例如: TA500" oninput="this.value = this.value.toUpperCase()">
+                        <label for="regEnd">尾 Code (例如: TA005 / TB0056)</label>
+                        <input type="text" id="regEnd" required placeholder="請輸入尾碼" oninput="this.value = this.value.toUpperCase()">
                     </div>
                 </div>
 
                 <button type="submit">確認登記並上傳同步</button>
             </form>
 
-            <!-- 專屬區塊：登記新券碼後只即時顯示本次登記資料 -->
+            <!-- 專屬區塊：登記新券碼後只即時顯示本次登記資料與自動計算的數量 -->
             <div id="recentRegisterSection" class="success-card" style="display: none;">
                 <h3 style="color: #34c759; margin-bottom: 12px; font-size: 16px;">✓ 券碼登記成功！本次登記資料如下：</h3>
                 <div class="info-row">
@@ -378,6 +395,10 @@
                     <strong id="recEndCode">-</strong>
                 </div>
                 <div class="info-row">
+                    <span>本次登記數量:</span>
+                    <strong id="recCount" style="color: #0071e3; font-size: 16px;">-</strong>
+                </div>
+                <div class="info-row">
                     <span>到期日:</span>
                     <strong id="recExpiry">-</strong>
                 </div>
@@ -396,6 +417,7 @@
                             <th>禮券名稱</th>
                             <th>首 Code</th>
                             <th>尾 Code</th>
+                            <th>數量</th>
                             <th>到期日</th>
                             <th>登記人</th>
                         </tr>
@@ -413,7 +435,7 @@
         // 後端 Google Apps Script Web App 網址
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFFE-1FzKiRDRiO4K_JV2J5azrYFWd4GWdTgJ_vZhXWnLiiGepF7mxoyU0lHDHguQU/exec';
 
-        // 記憶體中存放的資料結構（隨後端讀取覆蓋）
+        // 記憶體中存放的資料結構
         let suppliersData = {};
         let localRecords = [];
 
@@ -428,6 +450,33 @@
             "24m_end": "24個月月底",
             "365d": "365日"
         };
+
+        const calcMapping = {
+            "normal": "正常計算法",
+            "suffix_ignore": "尾碼干擾法"
+        };
+
+        // 自動解析英文字母與數字並計算數量的核心邏輯
+        function calculateCodeCount(startCode, endCode, calcType) {
+            let strA = startCode.trim().toUpperCase();
+            let strB = endCode.trim().toUpperCase();
+
+            // 如果是尾碼干擾法，直接切掉最後一個字元
+            if (calcType === 'suffix_ignore') {
+                if (strA.length > 1) strA = strA.slice(0, -1);
+                if (strB.length > 1) strB = strB.slice(0, -1);
+            }
+
+            // 提取出裡面的數字部分
+            const numA = parseInt(strA.replace(/[^0-9]/g, ''), 10);
+            const numB = parseInt(strB.replace(/[^0-9]/g, ''), 10);
+
+            if (isNaN(numA) || isNaN(numB)) {
+                return 0; 
+            }
+
+            return Math.abs(numB - numA) + 1;
+        }
 
         // 計算到期日的核心邏輯
         function calculateExpiryDate(startDate, rule) {
@@ -453,7 +502,7 @@
         // 格式化輸出目前系統時間
         function getFormattedTimestamp() {
             const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')} : ${String(now.getMinutes()).padStart(2,'0')} : ${String(now.getSeconds()).padStart(2,'0')}`;
         }
 
         // 初始化選單元件
@@ -488,7 +537,9 @@
             gifts.forEach(giftObj => {
                 const el = document.createElement('option');
                 el.value = giftObj.name;
-                el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'})`;
+                // 擴充顯示內容，包含到期日規則與計算規則
+                const calcLabel = calcMapping[giftObj.calcType] || '正常計算法';
+                el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'} / ${calcLabel})`;
                 selectEl.appendChild(el);
             });
             
@@ -499,7 +550,7 @@
             }
         }
 
-        // 顯示目前禮券對應的規則
+        // 顯示目前禮券對應的規則狀態
         function showActiveRule() {
             const supplier = document.getElementById('regSupplierSelect').value;
             const giftName = document.getElementById('regGiftSelect').value;
@@ -508,8 +559,10 @@
             
             if (found) {
                 document.getElementById('activeRuleText').innerText = ruleMapping[found.rule] || '未指定';
+                document.getElementById('activeCalcText').innerText = calcMapping[found.calcType] || '正常計算法';
             } else {
-                document.getElementById('activeRuleText').innerText = '無預設規則';
+                document.getElementById('activeRuleText').innerText = '-';
+                document.getElementById('activeCalcText').innerText = '-';
             }
         }
 
@@ -555,7 +608,6 @@
             document.getElementById('loginPage').classList.remove('active');
             document.getElementById('navMenu').style.display = 'flex';
             
-            // 先從 Google Sheet 下載取得其他人更新過的所有配置與歷史紀錄
             fetchDataFromGoogleSheet();
             switchPage('supplierPage');
         }
@@ -570,13 +622,12 @@
             switchPage('loginPage');
         }
 
-        // 新增供應商並永久同步儲存
+        // 新增供應商
         function addSupplier() {
             const name = document.getElementById('newSupplierName').value.trim();
             if (!name) return;
             if (!suppliersData[name]) {
                 suppliersData[name] = [];
-                // 即時發送上傳，寫入試算表資料庫
                 uploadConfigToGoogleSheet();
                 document.getElementById('newSupplierName').value = '';
             } else {
@@ -584,19 +635,20 @@
             }
         }
 
-        // 新增禮券繫結規則並永久同步儲存
+        // 新增禮券（儲存名稱、到期日規則、Code計算規則）
         function addGift() {
             const supplier = document.getElementById('belongSupplier').value;
             const giftName = document.getElementById('newGiftName').value.trim();
             const rule = document.getElementById('newGiftRule').value;
+            const calcType = document.getElementById('newGiftCalcType').value;
             if (!supplier || !giftName) return;
             
             const gifts = suppliersData[supplier] || [];
             const exists = gifts.some(g => g.name === giftName);
             
             if (!exists) {
-                suppliersData[supplier].push({ name: giftName, rule: rule });
-                // 即時發送上傳，寫入試算表資料庫，這樣其他人刷新或進入網站時即會看到
+                // 將計算模式 calcType 寫入配置資料中
+                suppliersData[supplier].push({ name: giftName, rule: rule, calcType: calcType });
                 uploadConfigToGoogleSheet();
                 document.getElementById('newGiftName').value = '';
             } else {
@@ -604,7 +656,7 @@
             }
         }
 
-        // 查詢最新券碼面板
+        // 查詢最新狀態區塊
         function loadQueryData() {
             const supplier = document.getElementById('supplierSelect').value;
             const gift = document.getElementById('giftSelect').value;
@@ -615,10 +667,12 @@
 
             if (matchedRecord) {
                 document.getElementById('infoRange').innerText = `${matchedRecord.startCode} 至 ${matchedRecord.endCode}`;
+                document.getElementById('infoCount').innerText = `${matchedRecord.count || 0} 張`;
                 document.getElementById('infoExpiry').innerText = matchedRecord.expiry;
                 document.getElementById('infoTime').innerText = matchedRecord.timestamp;
             } else {
                 document.getElementById('infoRange').innerText = '暫無登記範圍';
+                document.getElementById('infoCount').innerText = '0 張';
                 document.getElementById('infoExpiry').innerText = '暫無資料';
                 document.getElementById('infoTime').innerText = '-';
             }
@@ -630,12 +684,16 @@
             
             const supplier = document.getElementById('regSupplierSelect').value;
             const giftName = document.getElementById('regGiftSelect').value;
-            const startCode = document.getElementById('regStart').value.trim();
-            const endCode = document.getElementById('regEnd').value.trim();
+            const startCode = document.getElementById('regStart').value.trim().toUpperCase();
+            const endCode = document.getElementById('regEnd').value.trim().toUpperCase();
 
             const gifts = suppliersData[supplier] || [];
             const foundGift = gifts.find(g => g.name === giftName);
             const rule = foundGift ? foundGift.rule : '12m_end'; 
+            const calcType = foundGift ? foundGift.calcType : 'normal';
+
+            // 根據禮券設定的規則自動計算真正數量
+            const totalCount = calculateCodeCount(startCode, endCode, calcType);
 
             const now = new Date();
             const expiryDateStr = calculateExpiryDate(now, rule);
@@ -647,36 +705,38 @@
                 giftName: giftName,
                 startCode: startCode,
                 endCode: endCode,
+                count: totalCount, // 儲存計算出的數量欄位
                 expiry: expiryDateStr,
                 user: currentUser
             };
 
-            // 1. 同步上傳至雲端資料庫
+            // 1. 同步雲端試算表
             uploadRecordToGoogleSheet(newRecord);
 
-            // 2. 留在原頁面，更新本次登记面板數據（不跳轉至所有登記紀錄頁）
+            // 2. 保持在當前登記頁面，即時渲染更新本次登記面板的資料，絕不跳轉
             document.getElementById('recTime').innerText = timestampStr;
             document.getElementById('recSupplier').innerText = supplier;
             document.getElementById('recGiftName').innerText = giftName;
             document.getElementById('recStartCode').innerText = startCode;
             document.getElementById('recEndCode').innerText = endCode;
+            document.getElementById('recCount').innerText = `${totalCount} 張 (採用 ${calcMapping[calcType]})`;
             document.getElementById('recExpiry').innerText = expiryDateStr;
             
-            // 顯示當前只看最新一筆登記的區塊面板
+            // 開啟顯示獨立結果區塊
             document.getElementById('recentRegisterSection').style.display = 'block';
 
-            // 表單重設供連續登記使用
+            // 清空輸入框方便連續下一筆輸入
             document.getElementById('regStart').value = '';
             document.getElementById('regEnd').value = '';
         }
 
-        // 渲染整體歷史數據表
+        // 渲染完整歷史數據列表表格
         function renderRecordsTable() {
             const tbody = document.getElementById('recordsTableBody');
             tbody.innerHTML = '';
 
             if (localRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666666;">暫無歷史數據</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #666666;">暫無歷史紀錄</td></tr>';
                 return;
             }
 
@@ -688,6 +748,7 @@
                     <td>${record.giftName}</td>
                     <td>${record.startCode}</td>
                     <td>${record.endCode}</td>
+                    <td><strong>${record.count || 0}</strong></td>
                     <td>${record.expiry}</td>
                     <td>${record.user}</td>
                 `;
@@ -695,9 +756,8 @@
             });
         }
 
-        // ================= Google Sheets 多人即時資料交換傳輸區塊 =================
+        // ================= Google Sheets 多人資料互通雲端對接 =================
 
-        // 提交券碼明細
         function uploadRecordToGoogleSheet(recordData) {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -705,12 +765,10 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'insertRecord', data: recordData })
             }).then(() => {
-                // 自動更新記憶體中的歷史名冊快照
                 localRecords.unshift(recordData);
             });
         }
 
-        // 永久儲存：新增供應商及禮券到雲端，這樣其他人開網頁即可共享看到
         function uploadConfigToGoogleSheet() {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -718,13 +776,11 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'saveConfig', data: suppliersData })
             }).then(() => {
-                // 本地重新刷新渲染選單
                 initDropdowns();
                 alert('系統已完成雲端同步！其他協同使用者將可即時共用此配置。');
             });
         }
 
-        // 讀取多人即時同步的所有資訊 (包含全體更新後的選單架構、券碼清單)
         function fetchDataFromGoogleSheet() {
             fetch(`${GOOGLE_SCRIPT_URL}?action=readAll`)
             .then(response => response.json())
@@ -738,7 +794,7 @@
                 initDropdowns();
             })
             .catch(err => {
-                console.log("初始化同步連線異常或尚無任何配置資料");
+                console.log("連線建立中或尚無任何配置資料");
             });
         }
     </script>
