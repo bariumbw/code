@@ -247,9 +247,9 @@
             </form>
         </div>
 
-        <!-- 2) 供應商頁 (包含管理員新增功能與動態查詢) -->
+        <!-- 2) 供應商頁 (新增與查詢) -->
         <div id="supplierPage" class="page">
-            <!-- 管理員專屬：新增供應商與禮券 -->
+            <!-- 管理員專屬：新增供應商與禮券（在此時綁定到期日模式） -->
             <div id="adminAddSection" class="admin-section" style="display: none;">
                 <h2>新增供應商與禮券 (管理員限權)</h2>
                 <div class="grid-2">
@@ -261,9 +261,20 @@
                     <div class="form-group">
                         <label for="belongSupplier">2. 選擇隸屬供應商</label>
                         <select id="belongSupplier"></select>
+                        
                         <label for="newGiftName" style="margin-top: 8px;">禮券名稱</label>
                         <input type="text" id="newGiftName" placeholder="例如: A $50">
-                        <button type="button" class="secondary" onclick="addGift()" style="margin-top: 8px;">確認新增禮券</button>
+                        
+                        <label for="newGiftRule" style="margin-top: 8px;">預設計算到期日模式</label>
+                        <select id="newGiftRule">
+                            <option value="12m_end">12個月月底</option>
+                            <option value="13m_end">13個月月底</option>
+                            <option value="15m_end">15個月月底</option>
+                            <option value="18m_end">18個月月底</option>
+                            <option value="24m_end">24個月月底</option>
+                            <option value="365d">365日</option>
+                        </select>
+                        <button type="button" class="secondary" onclick="addGift()" style="margin-top: 12px;">確認新增禮券(繫結規則)</button>
                     </div>
                 </div>
             </div>
@@ -301,7 +312,7 @@
             </div>
         </div>
 
-        <!-- 3) 登記code 頁 (管理員專屬功能) -->
+        <!-- 3) 登記code 頁 (自動讀取禮券到期日規則，無須重複選擇) -->
         <div id="registerPage" class="page">
             <h2>登記新券碼 (管理員權限)</h2>
             <form id="registerForm" onsubmit="handleRegister(event)">
@@ -312,32 +323,26 @@
                     </div>
                     <div class="form-group">
                         <label for="regGiftSelect">選擇禮券項目</label>
-                        <select id="regGiftSelect" required></select>
+                        <select id="regGiftSelect" required onchange="showActiveRule()"></select>
                     </div>
+                </div>
+
+                <div class="form-group" style="background-color: #f5f5f7; padding: 12px; border-radius: 8px;">
+                    <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">此禮券預設到期規則: </span>
+                    <strong id="activeRuleText" style="color: #0071e3; font-size: 14px;">-</strong>
                 </div>
                 
                 <div class="grid-2">
                     <div class="form-group">
-                        <label for="regStart">首 Code (例如: TA001 或 BD001)</label>
+                        <label for="regStart">首 Code (例如: TA001)</label>
                         <input type="text" id="regStart" required placeholder="例如: TA001" oninput="this.value = this.value.toUpperCase()">
                     </div>
                     <div class="form-group">
-                        <label for="regEnd">尾 Code (例如: TA500 或 BD010)</label>
+                        <label for="regEnd">尾 Code (例如: TA500)</label>
                         <input type="text" id="regEnd" required placeholder="例如: TA500" oninput="this.value = this.value.toUpperCase()">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="regExpiryRule">計算到期日模式</label>
-                    <select id="regExpiryRule" required>
-                        <option value="12m_end">12個月月底</option>
-                        <option value="13m_end">13個月月底</option>
-                        <option value="15m_end">15個月月底</option>
-                        <option value="18m_end">18個月月底</option>
-                        <option value="24m_end">24個月月底</option>
-                        <option value="365d">365日</option>
-                    </select>
-                </div>
                 <button type="submit">確認登記並上傳同步</button>
             </form>
         </div>
@@ -368,18 +373,35 @@
     </div>
 
     <script>
-        // 已成功替換為您指定的最新 Google Apps Script Web App 網址
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpKBiBGHZfFue7mUnkJlfZEHSR2pNGiMAinYLB3-1k7sX88WGDtJ9bcnSS7gGfVggt/exec';
+        // 成功更新為您指定的最新 Google Apps Script Web App 網址
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxFFE-1FzKiRDRiO4K_JV2J5azrYFWd4GWdTgJ_vZhXWnLiiGepF7mxoyU0lHDHguQU/exec';
 
         // 初始本地備用配置結構
         let suppliersData = {
-            "供應商a": ["A $50", "A $80", "A $100"],
-            "供應商B": ["B $50", "B $80", "B $100"]
+            "供應商a": [
+                { name: "A $50", rule: "12m_end" },
+                { name: "A $80", rule: "12m_end" },
+                { name: "A $100", rule: "12m_end" }
+            ],
+            "供應商B": [
+                { name: "B $50", rule: "13m_end" },
+                { name: "B $80", rule: "13m_end" },
+                { name: "B $100", rule: "13m_end" }
+            ]
         };
         let localRecords = [];
 
         let currentUser = null;
         let isAdmin = false;
+
+        const ruleMapping = {
+            "12m_end": "12個月月底",
+            "13m_end": "13個月月底",
+            "15m_end": "15個月月底",
+            "18m_end": "18個月月底",
+            "24m_end": "24個月月底",
+            "365d": "365日"
+        };
 
         // 計算到期日的核心邏輯
         function calculateExpiryDate(startDate, rule) {
@@ -398,7 +420,6 @@
             if (rule === '18m_end') monthsToAdd = 18;
             if (rule === '24m_end') monthsToAdd = 24;
 
-            // 月份遞增並獲取目標月份的最後一天
             let targetDate = new Date(year, month + monthsToAdd + 1, 0);
             return targetDate.toISOString().split('T')[0];
         }
@@ -430,13 +451,39 @@
             });
         }
 
+        // 更新禮券選單
         function updateGiftSelect(supplierSelectId, giftSelectId) {
             const supplierVal = document.getElementById(supplierSelectId).value;
             const gifts = suppliersData[supplierVal] || [];
-            populateSelectWithOptions(giftSelectId, gifts);
+            
+            const selectEl = document.getElementById(giftSelectId);
+            selectEl.innerHTML = '';
+            
+            gifts.forEach(giftObj => {
+                const el = document.createElement('option');
+                el.value = giftObj.name;
+                el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'})`;
+                selectEl.appendChild(el);
+            });
             
             if(supplierSelectId === 'supplierSelect') {
                 loadQueryData();
+            } else if(supplierSelectId === 'regSupplierSelect') {
+                showActiveRule();
+            }
+        }
+
+        // 在登記頁面上動態顯示當前被選中禮券的到期規則
+        function showActiveRule() {
+            const supplier = document.getElementById('regSupplierSelect').value;
+            const giftName = document.getElementById('regGiftSelect').value;
+            const gifts = suppliersData[supplier] || [];
+            const found = gifts.find(g => g.name === giftName);
+            
+            if (found) {
+                document.getElementById('activeRuleText').innerText = ruleMapping[found.rule] || '未指定';
+            } else {
+                document.getElementById('activeRuleText').innerText = '無預設規則';
             }
         }
 
@@ -453,9 +500,12 @@
             if (pageId === 'recordsPage') {
                 renderRecordsTable();
             }
+            if (pageId === 'registerPage') {
+                showActiveRule();
+            }
         }
 
-        // 單一入口登入判斷
+        // 統一入口登入判斷
         function handleLogin(event) {
             event.preventDefault();
             const email = document.getElementById('loginEmail').value.trim().toLowerCase();
@@ -465,7 +515,6 @@
 
             currentUser = email;
             
-            // 驗證管理員信箱
             if (email === 'support@bespoke-mall.com') {
                 isAdmin = true;
                 document.getElementById('adminRegTab').style.display = 'block';
@@ -483,11 +532,10 @@
             initDropdowns();
             switchPage('supplierPage');
             
-            // 登入後即刻執行雲端資料同歩
             fetchDataFromGoogleSheet();
         }
 
-        // 登出登入表單重設
+        // 登出表單重設
         function logout() {
             currentUser = null;
             isAdmin = false;
@@ -512,31 +560,34 @@
             }
         }
 
-        // 為供應商新增指定禮券
+        // 新增禮券（繫結到期日計算規則）
         function addGift() {
             const supplier = document.getElementById('belongSupplier').value;
             const giftName = document.getElementById('newGiftName').value.trim();
+            const rule = document.getElementById('newGiftRule').value;
             if (!supplier || !giftName) return;
             
-            if (!suppliersData[supplier].includes(giftName)) {
-                suppliersData[supplier].push(giftName);
+            const gifts = suppliersData[supplier] || [];
+            const exists = gifts.some(g => g.name === giftName);
+            
+            if (!exists) {
+                suppliersData[supplier].push({ name: giftName, rule: rule });
                 uploadConfigToGoogleSheet();
                 initDropdowns();
                 document.getElementById('newGiftName').value = '';
-                alert(`已成功為 ${supplier} 新增禮券項目: ${giftName}`);
+                alert(`成功為 ${supplier} 新增禮券 [${giftName}] 且已繫結 [${ruleMapping[rule]}] 規則！`);
             } else {
-                alert('該供應商之下已存在相同規格之禮券。');
+                alert('該供應商之下已存在相同名稱之禮券。');
             }
         }
 
-        // 動態查驗並渲染當前最新狀態面板
+        // 動態檢視並渲染當前最新狀態面板
         function loadQueryData() {
             const supplier = document.getElementById('supplierSelect').value;
             const gift = document.getElementById('giftSelect').value;
             
             document.getElementById('infoGiftName').innerText = gift ? `${supplier} - ${gift}` : '-';
 
-            // 尋找符合此供應商與禮券的最新一筆紀錄
             const matchedRecord = localRecords.find(r => r.supplier === supplier && r.giftName === gift);
 
             if (matchedRecord) {
@@ -550,7 +601,7 @@
             }
         }
 
-        // 管理員提交券碼登記
+        // 管理員提交券碼登記 (自動讀取該禮券設定的規則在背景計算)
         function handleRegister(event) {
             event.preventDefault();
             
@@ -558,7 +609,10 @@
             const giftName = document.getElementById('regGiftSelect').value;
             const startCode = document.getElementById('regStart').value.trim();
             const endCode = document.getElementById('regEnd').value.trim();
-            const rule = document.getElementById('regExpiryRule').value;
+
+            const gifts = suppliersData[supplier] || [];
+            const foundGift = gifts.find(g => g.name === giftName);
+            const rule = foundGift ? foundGift.rule : '12m_end'; 
 
             const now = new Date();
             const expiryDateStr = calculateExpiryDate(now, rule);
@@ -574,14 +628,13 @@
                 user: currentUser
             };
 
-            // 即時渲染於本地端
             localRecords.unshift(newRecord); 
             uploadRecordToGoogleSheet(newRecord);
 
             document.getElementById('registerForm').reset();
             updateGiftSelect('regSupplierSelect', 'regGiftSelect');
             
-            alert(`登記完畢！\n系統依當前登記時間自動推算出到期日為: ${expiryDateStr}`);
+            alert(`登記完畢！\n系統已自動抓取該禮券的 [${ruleMapping[rule]}] 規則計算到期日為: ${expiryDateStr}`);
             switchPage('recordsPage');
         }
 
@@ -612,7 +665,6 @@
 
         // ================= Google Sheets 傳輸對接控制區塊 =================
 
-        // 上傳新登記的券碼明細
         function uploadRecordToGoogleSheet(recordData) {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -620,12 +672,10 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'insertRecord', data: recordData })
             }).then(() => {
-                // 傳輸完成後延遲重新整理，確保後端試算表已寫入完畢
                 setTimeout(fetchDataFromGoogleSheet, 1200);
             });
         }
 
-        // 上傳供應商與禮券選單配置
         function uploadConfigToGoogleSheet() {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
@@ -635,7 +685,6 @@
             });
         }
 
-        // 讀取多人即時同步的所有資訊
         function fetchDataFromGoogleSheet() {
             fetch(`${GOOGLE_SCRIPT_URL}?action=readAll`)
             .then(response => response.json())
@@ -651,7 +700,7 @@
                 }
             })
             .catch(err => {
-                console.log("網路連線限制，切換為本地預存緩存機制進行渲染");
+                console.log("網路限制，採用本地預存數據渲染");
                 renderRecordsTable();
                 loadQueryData();
             });
