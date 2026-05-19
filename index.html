@@ -125,7 +125,6 @@
             background-color: #0077ed;
         }
 
-        /* 管理員按鈕樣式 */
         .admin-btn {
             background-color: #0071e3;
             color: #ffffff;
@@ -196,13 +195,13 @@
 <div class="container">
     <header>
         <h1>Wedding Command Center</h1>
-        <div id="userInfo" style="font-size: 12px; color: #86868b;"></div>
+        <div id="userInfo" style="font-size: 12px; color: #86868b; font-weight: bold;"></div>
     </header>
 
     <nav id="navMenu" class="nav-menu" style="display: none;">
-        <button class="nav-btn active" onclick="switchPage('supplierPage')">即時庫存查詢</button>
-        <button class="nav-btn" id="adminRegTab" onclick="switchPage('registerPage')" style="display: none;">登記新券入庫</button>
-        <button class="nav-btn" onclick="switchPage('recordsPage')">歷史登記紀錄</button>
+        <button class="nav-btn" id="navSupplier" onclick="switchPage('supplierPage')">即時庫存查詢</button>
+        <button class="nav-btn" id="navRegister" onclick="switchPage('registerPage')">登記新券入庫</button>
+        <button class="nav-btn" id="navRecords" onclick="switchPage('recordsPage')">歷史登記紀錄</button>
         <button class="nav-btn logout-btn" onclick="logout()">安全登出</button>
     </nav>
 
@@ -222,7 +221,7 @@
         </form>
     </div>
 
-    <!-- 2) 查詢頁面 -->
+    <!-- 2) 查詢頁面 (MALL 專屬) -->
     <div id="supplierPage" class="page">
         <div id="adminAddSection" class="admin-box" style="display: none;">
             <h2 style="font-size:15px; color: #856404;">⚙️ 管理員配置</h2>
@@ -274,7 +273,7 @@
         </div>
     </div>
 
-    <!-- 3) 登記頁面 -->
+    <!-- 3) 登記頁面 (Wedding & MALL 共有) -->
     <div id="registerPage" class="page">
         <h2>新券碼登記</h2>
         <form onsubmit="handlePreview(event)">
@@ -310,7 +309,7 @@
         </div>
     </div>
 
-    <!-- 4) 紀錄頁面 -->
+    <!-- 4) 紀錄頁面 (Wedding & MALL 共有) -->
     <div id="recordsPage" class="page">
         <h2>流水帳紀錄</h2>
         <div class="table-responsive">
@@ -334,7 +333,7 @@
 
 <script>
     const G_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
-    let db = {}, logs = [], userEmail = null, isAdmin = false, pendingData = null;
+    let db = {}, logs = [], userEmail = null, userDisplayName = '', isAdmin = false, pendingData = null;
 
     function calculateFinalCount(start, end, type) {
         let a = start.trim().toUpperCase(), b = end.trim().toUpperCase();
@@ -356,17 +355,37 @@
         const emailInput = document.getElementById('loginEmail').value.trim().toLowerCase();
         const codeInput = document.getElementById('loginCode').value.trim();
         
-        // 身分驗證邏輯
+        let loginSuccess = false;
+
         if (emailInput === 'support@bespoke-mall.com' && codeInput === 'Admin888') {
             userEmail = emailInput;
+            userDisplayName = 'MALL';
             isAdmin = true;
+            loginSuccess = true;
+        } else if (emailInput === 'support@bespoke-wedding.com' && codeInput === 'Work123') {
+            userEmail = emailInput;
+            userDisplayName = 'Wedding';
+            isAdmin = false;
+            loginSuccess = true;
+        }
+
+        if (loginSuccess) {
             document.getElementById('navMenu').style.display = 'flex';
-            document.getElementById('adminRegTab').style.display = 'block';
-            document.getElementById('adminAddSection').style.display = 'block';
-            document.getElementById('userInfo').innerText = userEmail;
+            document.getElementById('userInfo').innerText = userDisplayName;
             document.getElementById('loginPage').classList.remove('active');
-            fetchData();
-            switchPage('supplierPage');
+            
+            // 權限控制
+            if (isAdmin) {
+                document.getElementById('navSupplier').style.display = 'block';
+                document.getElementById('adminAddSection').style.display = 'block';
+                fetchData();
+                switchPage('supplierPage');
+            } else {
+                document.getElementById('navSupplier').style.display = 'none';
+                document.getElementById('adminAddSection').style.display = 'none';
+                fetchData();
+                switchPage('registerPage');
+            }
         } else {
             alert('帳號或通行碼錯誤，請重新輸入。');
         }
@@ -399,7 +418,8 @@
         const config = db[s].find(i => i.name === gn);
         const count = calculateFinalCount(start, end, config.calcType);
         const expiry = calculateFinalExpiry(new Date(), config.rule);
-        pendingData = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, startCode: start, endCode: end, expiry, count, user: userEmail };
+        // 儲存顯示名稱
+        pendingData = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, startCode: start, endCode: end, expiry, count, user: userDisplayName };
         document.getElementById('recRange').innerText = `${start} -> ${end}`;
         document.getElementById('recCount').innerText = `${count} 張`;
         document.getElementById('recExpiry').innerText = expiry;
@@ -424,7 +444,8 @@
             hidePreview(); 
             document.getElementById('regStart').value = '';
             document.getElementById('regEnd').value = '';
-            switchPage('supplierPage');
+            // Wedding 導向紀錄頁看結果，MALL 導向查詢頁
+            switchPage(isAdmin ? 'supplierPage' : 'recordsPage');
         }
     }
 
@@ -447,7 +468,8 @@
             if (res.config) db = res.config; if (res.records) logs = res.records;
             const sups = Object.keys(db);
             ['supplierSelect', 'belongSupplier', 'regSupplierSelect'].forEach(id => {
-                const s = document.getElementById(id); s.innerHTML = '';
+                const s = document.getElementById(id); if(!s) return;
+                s.innerHTML = '';
                 sups.forEach(k => { let o = document.createElement('option'); o.value = k; o.innerText = k; s.appendChild(o); });
             });
             updateGiftSelect('supplierSelect', 'giftSelect'); updateGiftSelect('regSupplierSelect', 'regGiftSelect');
@@ -458,7 +480,12 @@
         const body = document.getElementById('recordsTableBody'); body.innerHTML = '';
         logs.forEach(l => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${l.timestamp}</td><td>${l.supplier}</td><td>${l.giftName}</td><td>${l.startCode}</td><td>${l.endCode}</td><td>${l.count}</td><td>${l.user.split('@')[0]}</td>`;
+            // 處理舊資料或新資料的顯示名稱
+            let displayUser = l.user;
+            if (l.user === 'support@bespoke-mall.com') displayUser = 'MALL';
+            if (l.user === 'support@bespoke-wedding.com') displayUser = 'Wedding';
+            
+            tr.innerHTML = `<td>${l.timestamp}</td><td>${l.supplier}</td><td>${l.giftName}</td><td>${l.startCode}</td><td>${l.endCode}</td><td>${l.count}</td><td>${displayUser}</td>`;
             body.appendChild(tr);
         });
     }
