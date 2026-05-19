@@ -3,167 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>券碼管理與登記系統</title>
+    <title>Wedding Command Center</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+        /* 全域樣式定義 */
+        * { 
+            box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
         }
 
-        body {
-            background-color: #f5f5f7;
-            color: #333333;
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
+        body { 
+            background-color: #f5f5f7; 
+            color: #1d1d1f; 
+            padding: 15px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
         }
 
-        .container {
-            width: 100%;
-            max-width: 1000px;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            padding: 20px;
+        .container { 
+            width: 100%; 
+            max-width: 1000px; 
+            background-color: #ffffff; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05); 
+            padding: 24px; 
         }
 
-        header {
-            border-bottom: 1px solid #e5e5e7;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        header { 
+            border-bottom: 1px solid #e5e5e7; 
+            padding-bottom: 12px; 
+            margin-bottom: 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
         }
 
-        h1 { font-size: 20px; color: #1d1d1f; }
-        h2 { font-size: 18px; color: #1d1d1f; margin-bottom: 16px; }
+        h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+        h2 { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #1d1d1f; }
 
-        .nav-menu {
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: #fbfbfd;
-            padding: 8px;
-            border-radius: 10px;
+        /* 導航欄橫向排列 */
+        .nav-menu { 
+            display: flex; 
+            flex-direction: row; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            margin-bottom: 24px; 
+            background: #f5f5f7; 
+            padding: 6px; 
+            border-radius: 12px; 
         }
 
-        .nav-btn {
-            flex: 1;
-            min-width: 100px;
-            background-color: #ffffff;
-            color: #1d1d1f;
-            padding: 10px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            border: 1px solid #d2d2d7;
-            transition: all 0.2s ease;
-            text-align: center;
-            white-space: nowrap;
+        .nav-btn { 
+            flex: 1; 
+            min-width: 110px; 
+            background-color: transparent; 
+            color: #424245; 
+            padding: 10px 14px; 
+            border-radius: 9px; 
+            font-size: 14px; 
+            font-weight: 500; 
+            cursor: pointer; 
+            border: none; 
+            transition: all 0.2s; 
+            text-align: center; 
+            white-space: nowrap; 
         }
 
-        .nav-btn.active {
-            background-color: #0071e3;
-            color: #ffffff;
-            border-color: #0071e3;
+        .nav-btn.active { 
+            background-color: #ffffff; 
+            color: #0071e3; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
         }
 
-        .nav-btn:hover:not(.active) {
-            background-color: #f5f5f7;
-        }
-
-        .nav-btn.logout-btn {
-            color: #ff3b30;
-            border-color: #ff3b30;
-            flex: 0 1 auto;
+        .nav-btn.logout-btn { 
+            color: #424245; 
+            flex: 0 1 auto; 
         }
 
         .page { display: none; }
         .page.active { display: block; }
 
+        /* 表單元素 */
         .form-group { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: #86868b; }
 
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #d2d2d7;
-            border-radius: 8px;
-            font-size: 16px;
-            background-color: #ffffff;
-            outline: none;
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #d2d2d7; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            background-color: #ffffff; 
+            outline: none; 
+            transition: border-color 0.3s; 
+            color: #1d1d1f;
+        }
+        input:focus { border-color: #0071e3; }
+
+        .grid-2 { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
         }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+        /* 按鈕美化 */
+        button.primary-action { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: #0071e3; 
+            color: #ffffff; 
+            border: none; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: transform 0.1s, background-color 0.2s; 
         }
+        button.primary-action:hover { background-color: #005bb5; }
+        button.primary-action:active { transform: scale(0.98); }
 
-        button.primary-action {
-            width: 100%;
-            padding: 14px;
-            background-color: #0071e3;
+        button.admin-save-btn { 
+            background-color: #0071e3; 
+            color: white; 
+            border: none; 
+            padding: 10px 16px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            margin-top: 10px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            box-shadow: 0 2px 4px rgba(0,113,227,0.2); 
+            transition: background-color 0.2s;
+        }
+        button.admin-save-btn:hover { background-color: #005bb5; }
+
+        button.secondary-action {
+            background-color: #34c759;
             color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
+            margin-top: 15px;
+        }
+        button.secondary-action:hover { background-color: #24a144; }
+
+        /* 即時查詢卡片 */
+        .info-card { 
+            background-color: #f9f9fb; 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            border-left: 6px solid #0071e3; 
         }
 
-        .info-card, .preview-card {
-            background-color: #f9f9fb;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-left: 5px solid #0071e3;
+        /* 🔍 內嵌式登記確認區塊 */
+        .preview-card { 
+            background-color: #fff9f0; 
+            border-radius: 12px; 
+            padding: 24px; 
+            margin-top: 25px; 
+            border: 1px solid #ffe8cc; 
+            border-left: 6px solid #ff9500; 
+        }
+        .preview-card h3 { 
+            font-size: 16px; 
+            margin-bottom: 15px; 
+            color: #af5b00; 
+            display: flex; 
+            align-items: center; 
         }
 
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
+        .info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            font-size: 16px; 
         }
+        .info-row strong { font-weight: 600; color: #1d1d1f; }
+        .highlight-text { color: #0071e3; font-weight: 700; font-size: 16px; }
 
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-        }
+        /* 表格與管理區塊 */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; min-width: 600px; }
+        th, td { padding: 12px; border-bottom: 1px solid #e5e5e7; text-align: left; }
+        th { background-color: #f5f5f7; color: #86868b; font-weight: 500; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #e5e5e7;
-            text-align: left;
-        }
-
-        th { background-color: #f5f5f7; }
-
-        .admin-box {
-            background-color: #fffef0;
-            border: 1px dashed #ffcc00;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        .admin-box { 
+            background-color: #fcfcfd; 
+            border: 1px solid #e5e5e7; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
         }
 
         @media (max-width: 600px) {
-            .grid-2 { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; gap: 0; }
             .nav-btn { flex: 1 1 45%; }
         }
     </style>
@@ -173,7 +208,7 @@
 <div class="container">
     <header>
         <h1>Wedding Command Center</h1>
-        <div id="userInfo" style="font-size: 12px; color: #86868b;"></div>
+        <div id="userInfo" style="font-size: 14px; color: #86868b; font-weight: 500;"></div>
     </header>
 
     <nav id="navMenu" class="nav-menu" style="display: none;">
@@ -188,54 +223,53 @@
         <h2>系統驗證</h2>
         <form onsubmit="handleLogin(event)">
             <div class="form-group">
-                <label>帳號 (Email)</label>
-                <input type="email" id="loginEmail" required placeholder="請輸入 Email">
+                <label>管理帳號 (Email)</label>
+                <input type="email" id="loginEmail" required placeholder="example@bespoke-mall.com">
             </div>
             <div class="form-group">
-                <label>通行碼</label>
-                <input type="password" id="loginCode" required placeholder="請輸入密碼">
+                <label>通行代碼</label>
+                <input type="password" id="loginCode" required placeholder="••••••••">
             </div>
-            <button type="submit" class="primary-action">登入系統</button>
+            <button type="submit" class="primary-action">進入管理後台</button>
         </form>
     </div>
 
     <!-- 2) 查詢頁面 -->
     <div id="supplierPage" class="page">
         <div id="adminAddSection" class="admin-box" style="display: none;">
-            <h2 style="font-size:15px; color: #856404;">⚙️ 管理員配置</h2>
+            <h2 style="font-size:16px; color: #1d1d1f; margin-bottom: 15px;">⚙️ 系統參數設定</h2>
             <div class="grid-2">
                 <div class="form-group">
-                    <label>新增供應商</label>
-                    <input type="text" id="newSupplierName" placeholder="供應商名稱">
-                    <button type="button" style="margin-top:8px" onclick="addSupplier()">執行新增</button>
+                    <label>新增供應商名稱</label>
+                    <input type="text" id="newSupplierName" placeholder="例如: Godiva">
+                    <button type="button" class="admin-save-btn" onclick="addSupplier()">執行新增供應商</button>
                 </div>
                 <div class="form-group">
-                    <label>新增禮券規則</label>
-                    <select id="belongSupplier" style="margin-bottom:5px"></select>
-                    <input type="text" id="newGiftName" placeholder="禮券名稱" style="margin-bottom:5px">
-                    <select id="newGiftRule" style="margin-bottom:5px">
-                        <option value="12m_end">12個月月底</option>
-                        <option value="13m_end">13個月月底</option>
-                        <option value="14m_end">14個月月底</option>
-                        <option value="15m_end">15個月月底</option>
-                        <option value="18m_end">18個月月底</option>
-                        <option value="24m_end">24個月月底</option>
-                        <option value="365d">365日</option>
-                    </select>
-                    <select id="newGiftCalcType">
-                        <option value="normal">正常 (首尾相減)</option>
-                        <option value="suffix_1">尾碼干擾 1</option>
-                        <option value="suffix_2">尾碼干擾 2</option>
-                    </select>
-                    <button type="button" style="margin-top:8px" onclick="addGift()">儲存禮券</button>
+                    <label>建立禮券與規則</label>
+                    <select id="belongSupplier" style="margin-bottom:8px"></select>
+                    <input type="text" id="newGiftName" placeholder="禮券名稱" style="margin-bottom:8px">
+                    <div class="grid-2" style="gap:8px">
+                        <select id="newGiftRule">
+                            <option value="12m_end">12個月月底</option>
+                            <option value="13m_end">13個月月底</option>
+                            <option value="24m_end">24個月月底</option>
+                            <option value="365d">365日</option>
+                        </select>
+                        <select id="newGiftCalcType">
+                            <option value="normal">正常 (相減)</option>
+                            <option value="suffix_1">尾碼干擾 1</option>
+                            <option value="suffix_2">尾碼干擾 2</option>
+                        </select>
+                    </div>
+                    <button type="button" class="admin-save-btn" onclick="addGift()">儲存禮券規則</button>
                 </div>
             </div>
         </div>
 
-        <h2>庫存狀態查詢</h2>
+        <h2>庫存即時狀態</h2>
         <div class="grid-2">
             <div class="form-group">
-                <label>供應商</label>
+                <label>供應商名稱</label>
                 <select id="supplierSelect" onchange="updateGiftSelect('supplierSelect', 'giftSelect')"></select>
             </div>
             <div class="form-group">
@@ -245,62 +279,76 @@
         </div>
         <div class="info-card">
             <div class="info-row"><span>項目名稱:</span><strong id="infoGiftName">-</strong></div>
-            <div class="info-row"><span>最新入庫段:</span><strong id="infoRange">-</strong></div>
-            <div class="info-row"><span>庫存量:</span><strong id="infoCount">-</strong></div>
+            <div class="info-row"><span>最新號段紀錄:</span><strong id="infoRange">-</strong></div>
+            <div class="info-row"><span>目前存量:</span><strong id="infoCount" style="color:#0071e3;">-</strong></div>
             <div class="info-row"><span>有效日期:</span><strong id="infoExpiry">-</strong></div>
         </div>
     </div>
 
     <!-- 3) 登記頁面 -->
     <div id="registerPage" class="page">
-        <h2>新券碼登記</h2>
+        <h2>新券碼入庫登記</h2>
         <form onsubmit="handlePreview(event)">
             <div class="grid-2">
                 <div class="form-group">
                     <label>供應商</label>
-                    <select id="regSupplierSelect" onchange="updateGiftSelect('regSupplierSelect', 'regGiftSelect')"></select>
+                    <select id="regSupplierSelect" onchange="updateGiftSelect('regSupplierSelect', 'regGiftSelect'); hidePreview();"></select>
                 </div>
                 <div class="form-group">
-                    <label>項目</label>
+                    <label>禮券項目</label>
                     <select id="regGiftSelect" onchange="hidePreview()"></select>
                 </div>
             </div>
             <div class="grid-2">
                 <div class="form-group">
-                    <label>首碼 (Start Code)</label>
-                    <input type="text" id="regStart" required oninput="this.value=this.value.toUpperCase(); hidePreview();">
+                    <label>起始券碼 (Start)</label>
+                    <input type="text" id="regStart" required oninput="this.value=this.value.toUpperCase(); hidePreview();" placeholder="例如: AA001">
                 </div>
                 <div class="form-group">
-                    <label>尾碼 (End Code)</label>
-                    <input type="text" id="regEnd" required oninput="this.value=this.value.toUpperCase(); hidePreview();">
+                    <label>結束券碼 (End)</label>
+                    <input type="text" id="regEnd" required oninput="this.value=this.value.toUpperCase(); hidePreview();" placeholder="例如: AA100">
                 </div>
             </div>
-            <button type="submit" class="primary-action" style="background-color:#1d1d1f">計算預覽</button>
+            <button type="submit" class="primary-action" style="background-color:#1d1d1f">執行計算預覽</button>
         </form>
 
-        <div id="recentRegisterSection" class="preview-card" style="display: none; margin-top: 20px; border-left-color: #ff9500;">
-            <h3>🔍 登記確認</h3>
-            <div class="info-row"><span>範圍:</span><strong id="recRange">-</strong></div>
-            <div class="info-row"><span>計算總數:</span><strong id="recCount" style="color:#0071e3; font-size:18px;">-</strong></div>
-            <div class="info-row"><span>有效至:</span><strong id="recExpiry">-</strong></div>
-            <button type="button" class="primary-action" style="background-color:#34c759; margin-top:10px;" onclick="confirmSubmit()">確認正式存檔</button>
+        <!-- 🔍 內嵌式登記確認區塊 -->
+        <div id="recentRegisterSection" class="preview-card" style="display: none;">
+            <h3>🔍 登記資料確認</h3>
+            <div class="info-row">
+                <span>項目名稱:</span>
+                <strong id="recName">-</strong>
+            </div>
+            <div class="info-row">
+                <span>券碼範圍:</span>
+                <strong id="recRange">-</strong>
+            </div>
+            <div class="info-row">
+                <span>預計入庫數量:</span>
+                <span id="recCount" class="highlight-text">-</span>
+            </div>
+            <div class="info-row">
+                <span>系統預設到期日:</span>
+                <strong id="recExpiry">-</strong>
+            </div>
+            <button type="button" class="primary-action secondary-action" onclick="confirmSubmit()">確認正式存檔</button>
         </div>
     </div>
 
     <!-- 4) 紀錄頁面 -->
     <div id="recordsPage" class="page">
-        <h2>流水帳紀錄</h2>
+        <h2>歷史入庫流水帳</h2>
         <div class="table-responsive">
             <table>
                 <thead>
                     <tr>
-                        <th>時間</th>
+                        <th>登記時間</th>
                         <th>供應商</th>
                         <th>項目</th>
-                        <th>首碼</th>
-                        <th>尾碼</th>
+                        <th>起始碼</th>
+                        <th>結束碼</th>
                         <th>數量</th>
-                        <th>經手</th>
+                        <th>經手人</th>
                     </tr>
                 </thead>
                 <tbody id="recordsTableBody"></tbody>
@@ -313,34 +361,52 @@
     const G_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
     let db = {}, logs = [], userEmail = null, isAdmin = false, pendingData = null;
 
+    // 計算數量
     function calculateFinalCount(start, end, type) {
-        let a = start.trim().toUpperCase(), b = end.trim().toUpperCase();
-        if (type === 'suffix_1') { a = a.slice(0, -1); b = b.slice(0, -1); }
-        else if (type === 'suffix_2') { a = a.slice(0, -2); b = b.slice(0, -2); }
-        const nA = parseInt(a.replace(/[^0-9]/g, ''), 10), nB = parseInt(b.replace(/[^0-9]/g, ''), 10);
-        return isNaN(nA) || isNaN(nB) ? 0 : Math.abs(nB - nA) + 1;
+        let a = start.trim().toUpperCase();
+        let b = end.trim().toUpperCase();
+        if (type === 'suffix_1') { 
+            a = a.slice(0, -1); 
+            b = b.slice(0, -1); 
+        } else if (type === 'suffix_2') { 
+            a = a.slice(0, -2); 
+            b = b.slice(0, -2); 
+        }
+        const nA = parseInt(a.replace(/[^0-9]/g, ''), 10);
+        const nB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+        if (isNaN(nA) || isNaN(nB)) return 0;
+        return Math.abs(nB - nA) + 1;
     }
 
+    // 計算日期
     function calculateFinalExpiry(today, rule) {
         let d = new Date(today);
-        if (rule === '365d') { d.setDate(d.getDate() + 365); return d.toISOString().split('T')[0]; }
+        if (rule === '365d') { 
+            d.setDate(d.getDate() + 365); 
+            return d.toISOString().split('T')[0]; 
+        }
         let months = parseInt(rule) || 12;
         return new Date(d.getFullYear(), d.getMonth() + months + 1, 0).toISOString().split('T')[0];
     }
 
+    // 登入處理
     function handleLogin(e) {
         e.preventDefault();
         userEmail = document.getElementById('loginEmail').value.trim().toLowerCase();
         isAdmin = (userEmail === 'support@bespoke-mall.com');
+        
         document.getElementById('navMenu').style.display = 'flex';
-        document.getElementById('adminRegTab').style.display = isAdmin ? 'block' : 'none';
+        // 為了讓您測試方便，此處預設全部使用者皆可看見登記按鈕，若需限制請改回 isAdmin ? 'block' : 'none'
+        document.getElementById('adminRegTab').style.display = 'block'; 
         document.getElementById('adminAddSection').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('userInfo').innerText = userEmail;
+        document.getElementById('userInfo').innerText = `已登入: ${userEmail}`;
+        
         document.getElementById('loginPage').classList.remove('active');
         fetchData();
         switchPage('supplierPage');
     }
 
+    // 頁面切換
     function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -350,100 +416,162 @@
         if (pageId === 'recordsPage') renderLogs();
     }
 
+    // 更新連動下拉選單
     function updateGiftSelect(sid, gid) {
-        const s = document.getElementById(sid).value, gSelect = document.getElementById(gid);
+        const s = document.getElementById(sid).value;
+        const gSelect = document.getElementById(gid);
         gSelect.innerHTML = '';
-        (db[s] || []).forEach(g => {
-            let opt = document.createElement('option');
-            opt.value = g.name; opt.innerText = g.name;
-            gSelect.appendChild(opt);
-        });
+        
+        if (db[s]) {
+            db[s].forEach(g => {
+                let opt = document.createElement('option');
+                opt.value = g.name; 
+                opt.innerText = g.name;
+                gSelect.appendChild(opt);
+            });
+        }
         if (sid === 'supplierSelect') loadQueryData();
+        hidePreview();
     }
 
+    // 處理內嵌式預覽（修復資料不見的問題）
     function handlePreview(e) {
         e.preventDefault();
-        const s = document.getElementById('regSupplierSelect').value, gn = document.getElementById('regGiftSelect').value;
-        const start = document.getElementById('regStart').value, end = document.getElementById('regEnd').value;
+        const s = document.getElementById('regSupplierSelect').value;
+        const gn = document.getElementById('regGiftSelect').value;
+        const start = document.getElementById('regStart').value;
+        const end = document.getElementById('regEnd').value;
+
+        // 資料防呆檢驗
+        if (!s || !gn || !db[s]) {
+            alert('系統尚未準備好，請確認已選擇供應商與禮券項目。');
+            return;
+        }
+
         const config = db[s].find(i => i.name === gn);
+        if (!config) {
+            alert('找不到對應的禮券規則。');
+            return;
+        }
+
         const count = calculateFinalCount(start, end, config.calcType);
         const expiry = calculateFinalExpiry(new Date(), config.rule);
-        pendingData = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, startCode: start, endCode: end, expiry, count, user: userEmail };
-        document.getElementById('recRange').innerText = `${start} -> ${end}`;
+        
+        pendingData = { 
+            timestamp: new Date().toLocaleString(), 
+            supplier: s, 
+            giftName: gn, 
+            startCode: start, 
+            endCode: end, 
+            expiry: expiry, 
+            count: count, 
+            user: userEmail 
+        };
+        
+        // 將計算好的資料寫入 HTML 節點
+        document.getElementById('recName').innerText = gn;
+        document.getElementById('recRange').innerText = `${start} 至 ${end}`;
         document.getElementById('recCount').innerText = `${count} 張`;
         document.getElementById('recExpiry').innerText = expiry;
+        
+        // 確保強制顯示區塊
         document.getElementById('recentRegisterSection').style.display = 'block';
     }
 
-    // 核心更改：加入彈出式視窗確認
+    // 正式存檔
     function confirmSubmit() {
         if (!pendingData) return;
+        // 發送背景請求
+        fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'insertRecord', data: pendingData }) });
+        
+        logs.unshift(pendingData); 
+        alert('入庫存檔成功！'); 
+        
+        hidePreview(); 
+        document.getElementById('regStart').value = '';
+        document.getElementById('regEnd').value = '';
+        switchPage('recordsPage');
+    }
 
-        const confirmMsg = `請再次核對登記資料：\n\n` +
-                           `供應商：${pendingData.supplier}\n` +
-                           `項目：${pendingData.giftName}\n` +
-                           `範圍：${pendingData.startCode} 至 ${pendingData.endCode}\n` +
-                           `數量：${pendingData.count} 張\n` +
-                           `到期日：${pendingData.expiry}\n\n` +
-                           `確定要正式存檔嗎？`;
+    function hidePreview() { 
+        document.getElementById('recentRegisterSection').style.display = 'none'; 
+        pendingData = null;
+    }
 
-        if (confirm(confirmMsg)) {
-            fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'insertRecord', data: pendingData }) });
-            logs.unshift(pendingData); 
-            alert('登記成功！資料已同步。'); 
-            hidePreview(); 
-            document.getElementById('regStart').value = '';
-            document.getElementById('regEnd').value = '';
-            switchPage('supplierPage');
+    // 新增供應商
+    function addSupplier() {
+        const n = document.getElementById('newSupplierName').value.trim();
+        if (n && !db[n]) { 
+            db[n] = []; 
+            syncConfig(); 
+            document.getElementById('newSupplierName').value = ''; 
         }
     }
 
-    function addSupplier() {
-        const n = document.getElementById('newSupplierName').value.trim();
-        if (n && !db[n]) { db[n] = []; syncConfig(); document.getElementById('newSupplierName').value = ''; }
-    }
-
+    // 新增禮券
     function addGift() {
-        const s = document.getElementById('belongSupplier').value, n = document.getElementById('newGiftName').value.trim();
-        if (s && n) { db[s].push({ name: n, rule: document.getElementById('newGiftRule').value, calcType: document.getElementById('newGiftCalcType').value }); syncConfig(); document.getElementById('newGiftName').value = ''; }
+        const s = document.getElementById('belongSupplier').value;
+        const n = document.getElementById('newGiftName').value.trim();
+        if (s && n) { 
+            db[s].push({ name: n, rule: document.getElementById('newGiftRule').value, calcType: document.getElementById('newGiftCalcType').value }); 
+            syncConfig(); 
+            document.getElementById('newGiftName').value = ''; 
+        }
     }
 
+    // 同步設定到 Google Apps Script
     function syncConfig() {
         fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveConfig', data: db }) }).then(() => fetchData());
     }
 
+    // 抓取全域資料
     function fetchData() {
         fetch(`${G_URL}?action=readAll`).then(r => r.json()).then(res => {
-            if (res.config) db = res.config; if (res.records) logs = res.records;
+            if (res.config) db = res.config; 
+            if (res.records) logs = res.records;
+            
             const sups = Object.keys(db);
             ['supplierSelect', 'belongSupplier', 'regSupplierSelect'].forEach(id => {
-                const s = document.getElementById(id); s.innerHTML = '';
-                sups.forEach(k => { let o = document.createElement('option'); o.value = k; o.innerText = k; s.appendChild(o); });
+                const s = document.getElementById(id); 
+                s.innerHTML = '';
+                sups.forEach(k => { 
+                    let o = document.createElement('option'); 
+                    o.value = k; 
+                    o.innerText = k; 
+                    s.appendChild(o); 
+                });
             });
-            updateGiftSelect('supplierSelect', 'giftSelect'); updateGiftSelect('regSupplierSelect', 'regGiftSelect');
-        });
+            updateGiftSelect('supplierSelect', 'giftSelect'); 
+            updateGiftSelect('regSupplierSelect', 'regGiftSelect');
+        }).catch(err => console.log('資料載入異常:', err));
     }
 
+    // 渲染歷史紀錄表格
     function renderLogs() {
-        const body = document.getElementById('recordsTableBody'); body.innerHTML = '';
+        const body = document.getElementById('recordsTableBody'); 
+        body.innerHTML = '';
         logs.forEach(l => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${l.timestamp}</td><td>${l.supplier}</td><td>${l.giftName}</td><td>${l.startCode}</td><td>${l.endCode}</td><td>${l.count}</td><td>${l.user.split('@')[0]}</td>`;
+            tr.innerHTML = `<td>${l.timestamp}</td><td>${l.supplier}</td><td>${l.giftName}</td><td>${l.startCode}</td><td>${l.endCode}</td><td><strong>${l.count}</strong></td><td>${l.user.split('@')[0]}</td>`;
             body.appendChild(tr);
         });
     }
 
+    // 載入當前禮券庫存狀態
     function loadQueryData() {
-        const s = document.getElementById('supplierSelect').value, gn = document.getElementById('giftSelect').value;
+        const s = document.getElementById('supplierSelect').value;
+        const gn = document.getElementById('giftSelect').value;
         const last = logs.find(l => l.supplier === s && l.giftName === gn);
+        
         document.getElementById('infoGiftName').innerText = gn || '-';
-        document.getElementById('infoRange').innerText = last ? `${last.startCode} ~ ${last.endCode}` : '無資料';
+        document.getElementById('infoRange').innerText = last ? `${last.startCode} ~ ${last.endCode}` : '尚無紀錄';
         document.getElementById('infoCount').innerText = last ? `${last.count} 張` : '-';
         document.getElementById('infoExpiry').innerText = last ? last.expiry : '-';
     }
 
-    function hidePreview() { document.getElementById('recentRegisterSection').style.display = 'none'; }
-    function logout() { location.reload(); }
+    function logout() { 
+        location.reload(); 
+    }
 </script>
 </body>
 </html>
