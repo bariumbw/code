@@ -1,382 +1,479 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wedding Command Center - 券碼管理系統</title>
+    <title>券碼管理與登記系統</title>
     <style>
-        :root {
-            --primary-color: #3498db;
-            --success-color: #2ecc71;
-            --admin-color: #e74c3c;
-            --bg-color: #f5f7f9;
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
+            background-color: #f5f5f7;
+            color: #333333;
             padding: 15px;
-            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        /* 登入介面 */
-        #login-section {
-            background: #fff;
-            padding: 30px 20px;
+            width: 100%;
+            max-width: 1000px;
+            background-color: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        input[type="email"], input[type="password"], input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-
-        /* 按鈕基礎樣式 */
-        .btn {
-            border: none;
-            border-radius: 8px;
-            padding: 14px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 10px;
-            display: inline-block;
-            text-decoration: none;
-            text-align: center;
-        }
-
-        /* 登入按鈕 */
-        #login-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* 執行新增按鈕美化 */
-        .btn-add-stock {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
-            border: none;
-        }
-        .btn-add-stock:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
-            filter: brightness(1.1);
-        }
-        .btn-add-stock:active {
-            transform: translateY(0);
-        }
-
-        /* 儲存禮券按鈕美化 */
-        .btn-save-config {
-            background: linear-gradient(135deg, #2ecc71, #27ae60);
-            color: white;
-            box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
-            border: none;
-        }
-        .btn-save-config:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(46, 204, 113, 0.3);
-            filter: brightness(1.1);
-        }
-        .btn-save-config:active {
-            transform: translateY(0);
-        }
-
-        /* 管理面板樣式 */
-        .card {
-            background: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
         }
 
-        .header {
+        header {
+            border-bottom: 1px solid #e5e5e7;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+
+        h1 { font-size: 20px; color: #1d1d1f; }
+        h2 { font-size: 18px; color: #1d1d1f; margin-bottom: 16px; }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: #fbfbfd;
+            padding: 8px;
+            border-radius: 10px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            min-width: 100px;
+            background-color: #ffffff;
+            color: #1d1d1f;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #d2d2d7;
+            transition: all 0.2s ease;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .nav-btn.active {
+            background-color: #0071e3;
+            color: #ffffff;
+            border-color: #0071e3;
+        }
+
+        .nav-btn:hover:not(.active) {
+            background-color: #f5f5f7;
+        }
+
+        .nav-btn.logout-btn {
+            color: #ff3b30;
+            border-color: #ff3b30;
+            flex: 0 1 auto;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #ffffff;
+            outline: none;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        button.primary-action {
+            width: 100%;
+            padding: 14px;
+            background-color: #0071e3;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button.primary-action:hover {
+            background-color: #0077ed;
+        }
+
+        /* 管理員按鈕樣式 */
+        .admin-btn {
+            background-color: #0071e3;
+            color: #ffffff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .admin-btn:hover {
+            background-color: #0056b3;
+            box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+        }
+
+        .info-card, .preview-card {
+            background-color: #f9f9fb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #0071e3;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e5e7;
+            text-align: left;
+        }
+
+        th { background-color: #f5f5f7; }
+
+        .admin-box {
+            background-color: #fffef0;
+            border: 1px dashed #ffcc00;
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
 
-        .status-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            background: #eee;
-        }
-
-        .hidden { display: none !important; }
-
-        .row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .col { flex: 1; }
-
-        label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        #inventory-display {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
-            line-height: 1.6;
+        @media (max-width: 600px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .nav-btn { flex: 1 1 45%; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- 登入部分 -->
-    <section id="login-section">
-        <h2 id="brand-title">Bespoke Mall 系統登入</h2>
-        <input type="email" id="email" placeholder="管理員電郵" value="support@bespoke-mall.com">
-        <input type="password" id="password" placeholder="密碼">
-        <button id="login-btn" class="btn" onclick="checkLogin()">登入</button>
-    </section>
+    <header>
+        <h1>Wedding Command Center</h1>
+        <div id="userInfo" style="font-size: 12px; color: #86868b;"></div>
+    </header>
 
-    <!-- 管理面板 -->
-    <section id="admin-panel" class="hidden">
-        <div class="header">
-            <h3>券碼管理與登記</h3>
-            <span id="user-display" class="status-badge"></span>
-        </div>
+    <nav id="navMenu" class="nav-menu" style="display: none;">
+        <button class="nav-btn active" onclick="switchPage('supplierPage')">即時庫存查詢</button>
+        <button class="nav-btn" id="adminRegTab" onclick="switchPage('registerPage')" style="display: none;">登記新券入庫</button>
+        <button class="nav-btn" onclick="switchPage('recordsPage')">歷史登記紀錄</button>
+        <button class="nav-btn logout-btn" onclick="logout()">安全登出</button>
+    </nav>
 
-        <!-- 1. 當前庫存資訊 -->
-        <div class="card">
-            <label>目前配置與狀態</label>
-            <div id="inventory-display">
-                載入中...
+    <!-- 1) 登入頁面 -->
+    <div id="loginPage" class="page active">
+        <h2>系統驗證</h2>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>帳號 (Email)</label>
+                <input type="email" id="loginEmail" required placeholder="請輸入 Email">
             </div>
-        </div>
-
-        <!-- 2. 入庫登記表單 -->
-        <div class="card">
-            <h4>入庫登記</h4>
-            <div class="row">
-                <div class="col">
-                    <label>首碼 (S/N Start)</label>
-                    <input type="text" id="sn_start" placeholder="例如: AB1001">
-                </div>
-                <div class="col">
-                    <label>尾碼 (S/N End)</label>
-                    <input type="text" id="sn_end" placeholder="例如: AB1100">
-                </div>
+            <div class="form-group">
+                <label>通行碼</label>
+                <input type="password" id="loginCode" required placeholder="請輸入密碼">
             </div>
+            <button type="submit" class="primary-action">登入系統</button>
+        </form>
+    </div>
 
-            <div class="row">
-                <div class="col">
-                    <label>計算模式</label>
-                    <select id="calc_type">
-                        <option value="normal">純數字相減</option>
-                        <option value="suffix_1">過濾尾碼 1 位</option>
-                        <option value="suffix_2">過濾尾碼 2 位</option>
+    <!-- 2) 查詢頁面 -->
+    <div id="supplierPage" class="page">
+        <div id="adminAddSection" class="admin-box" style="display: none;">
+            <h2 style="font-size:15px; color: #856404;">⚙️ 管理員配置</h2>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>新增供應商</label>
+                    <input type="text" id="newSupplierName" placeholder="供應商名稱">
+                    <button type="button" class="admin-btn" style="margin-top:8px; width: 100%;" onclick="addSupplier()">執行新增</button>
+                </div>
+                <div class="form-group">
+                    <label>新增禮券規則</label>
+                    <select id="belongSupplier" style="margin-bottom:5px"></select>
+                    <input type="text" id="newGiftName" placeholder="禮券名稱" style="margin-bottom:5px">
+                    <select id="newGiftRule" style="margin-bottom:5px">
+                        <option value="12m_end">12個月月底</option>
+                        <option value="13m_end">13個月月底</option>
+                        <option value="14m_end">14個月月底</option>
+                        <option value="15m_end">15個月月底</option>
+                        <option value="18m_end">18個月月底</option>
+                        <option value="24m_end">24個月月底</option>
+                        <option value="365d">365日</option>
                     </select>
-                </div>
-                <div class="col">
-                    <label>到期規則</label>
-                    <select id="date_rule">
-                        <option value="end_of_12m">12個月月底</option>
-                        <option value="end_of_13m">13個月月底</option>
-                        <option value="end_of_14m">14個月月底</option>
-                        <option value="end_of_15m">15個月月底</option>
-                        <option value="end_of_18m">18個月月底</option>
-                        <option value="end_of_24m">24個月月底</option>
-                        <option value="365days">365日</option>
+                    <select id="newGiftCalcType">
+                        <option value="normal">正常 (首尾相減)</option>
+                        <option value="suffix_1">尾碼干擾 1</option>
+                        <option value="suffix_2">尾碼干擾 2</option>
                     </select>
+                    <button type="button" class="admin-btn" style="margin-top:8px; width: 100%;" onclick="addGift()">儲存禮券</button>
                 </div>
             </div>
-
-            <button class="btn btn-add-stock" onclick="processEntry()">執行新增入庫</button>
         </div>
 
-        <!-- 3. 配置設定 -->
-        <div class="card">
-            <h4>禮券項目配置</h4>
-            <label>項目名稱 (如: agnès b. $50 現金券)</label>
-            <input type="text" id="item_name" placeholder="輸入項目名稱">
-            <button class="btn btn-save-config" onclick="saveConfig()">儲存禮券配置</button>
+        <h2>庫存狀態查詢</h2>
+        <div class="grid-2">
+            <div class="form-group">
+                <label>供應商</label>
+                <select id="supplierSelect" onchange="updateGiftSelect('supplierSelect', 'giftSelect')"></select>
+            </div>
+            <div class="form-group">
+                <label>禮券項目</label>
+                <select id="giftSelect" onchange="loadQueryData()"></select>
+            </div>
         </div>
+        <div class="info-card">
+            <div class="info-row"><span>項目名稱:</span><strong id="infoGiftName">-</strong></div>
+            <div class="info-row"><span>最新入庫段:</span><strong id="infoRange">-</strong></div>
+            <div class="info-row"><span>庫存量:</span><strong id="infoCount">-</strong></div>
+            <div class="info-row"><span>有效日期:</span><strong id="infoExpiry">-</strong></div>
+        </div>
+    </div>
 
-        <button class="btn" onclick="logout()" style="background:#eee; color:#333; margin-top:20px;">退出系統</button>
-    </section>
+    <!-- 3) 登記頁面 -->
+    <div id="registerPage" class="page">
+        <h2>新券碼登記</h2>
+        <form onsubmit="handlePreview(event)">
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>供應商</label>
+                    <select id="regSupplierSelect" onchange="updateGiftSelect('regSupplierSelect', 'regGiftSelect')"></select>
+                </div>
+                <div class="form-group">
+                    <label>項目</label>
+                    <select id="regGiftSelect" onchange="hidePreview()"></select>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>首碼 (Start Code)</label>
+                    <input type="text" id="regStart" required oninput="this.value=this.value.toUpperCase(); hidePreview();">
+                </div>
+                <div class="form-group">
+                    <label>尾碼 (End Code)</label>
+                    <input type="text" id="regEnd" required oninput="this.value=this.value.toUpperCase(); hidePreview();">
+                </div>
+            </div>
+            <button type="submit" class="primary-action" style="background-color:#1d1d1f">計算預覽</button>
+        </form>
+
+        <div id="recentRegisterSection" class="preview-card" style="display: none; margin-top: 20px; border-left-color: #ff9500;">
+            <h3>🔍 登記確認</h3>
+            <div class="info-row"><span>範圍:</span><strong id="recRange">-</strong></div>
+            <div class="info-row"><span>計算總數:</span><strong id="recCount" style="color:#0071e3; font-size:18px;">-</strong></div>
+            <div class="info-row"><span>有效至:</span><strong id="recExpiry">-</strong></div>
+            <button type="button" class="primary-action" style="background-color:#34c759; margin-top:10px;" onclick="confirmSubmit()">確認正式存檔</button>
+        </div>
+    </div>
+
+    <!-- 4) 紀錄頁面 -->
+    <div id="recordsPage" class="page">
+        <h2>流水帳紀錄</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>供應商</th>
+                        <th>項目</th>
+                        <th>首碼</th>
+                        <th>尾碼</th>
+                        <th>數量</th>
+                        <th>經手</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
-    // 核心設定
-    const ADMIN_EMAIL = "support@bespoke-mall.com";
-    const ADMIN_PW = "Admin888";
+    const G_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
+    let db = {}, logs = [], userEmail = null, isAdmin = false, pendingData = null;
 
-    let currentUser = null;
+    function calculateFinalCount(start, end, type) {
+        let a = start.trim().toUpperCase(), b = end.trim().toUpperCase();
+        if (type === 'suffix_1') { a = a.slice(0, -1); b = b.slice(0, -1); }
+        else if (type === 'suffix_2') { a = a.slice(0, -2); b = b.slice(0, -2); }
+        const nA = parseInt(a.replace(/[^0-9]/g, ''), 10), nB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+        return isNaN(nA) || isNaN(nB) ? 0 : Math.abs(nB - nA) + 1;
+    }
 
-    // 頁面加載時自動恢復配置
-    window.onload = function() {
-        const savedName = localStorage.getItem('wedding_item_name');
-        const savedRule = localStorage.getItem('wedding_date_rule');
-        const savedCalc = localStorage.getItem('wedding_calc_type');
+    function calculateFinalExpiry(today, rule) {
+        let d = new Date(today);
+        if (rule === '365d') { d.setDate(d.getDate() + 365); return d.toISOString().split('T')[0]; }
+        let months = parseInt(rule) || 12;
+        return new Date(d.getFullYear(), d.getMonth() + months + 1, 0).toISOString().split('T')[0];
+    }
 
-        if (savedName) {
-            document.getElementById('item_name').value = savedName;
-        }
-        if (savedRule) {
-            document.getElementById('date_rule').value = savedRule;
-        }
-        if (savedCalc) {
-            document.getElementById('calc_type').value = savedCalc;
-        }
-        updateInventoryDisplay();
-    };
-
-    function checkLogin() {
-        const email = document.getElementById('email').value;
-        const pw = document.getElementById('password').value;
-
-        if (email === ADMIN_EMAIL && pw === ADMIN_PW) {
-            currentUser = email;
-            showPanel();
+    function handleLogin(e) {
+        e.preventDefault();
+        const emailInput = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const codeInput = document.getElementById('loginCode').value.trim();
+        
+        // 身分驗證邏輯
+        if (emailInput === 'support@bespoke-mall.com' && codeInput === 'Admin888') {
+            userEmail = emailInput;
+            isAdmin = true;
+            document.getElementById('navMenu').style.display = 'flex';
+            document.getElementById('adminRegTab').style.display = 'block';
+            document.getElementById('adminAddSection').style.display = 'block';
+            document.getElementById('userInfo').innerText = userEmail;
+            document.getElementById('loginPage').classList.remove('active');
+            fetchData();
+            switchPage('supplierPage');
         } else {
-            alert("帳號或密碼錯誤");
+            alert('帳號或通行碼錯誤，請重新輸入。');
         }
     }
 
-    function showPanel() {
-        document.getElementById('login-section').classList.add('hidden');
-        document.getElementById('admin-panel').classList.remove('hidden');
-        document.getElementById('user-display').innerText = `管理員: ${currentUser}`;
-        updateInventoryDisplay();
+    function switchPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(pageId));
+        if (btn) btn.classList.add('active');
+        if (pageId === 'recordsPage') renderLogs();
     }
 
-    function logout() {
-        currentUser = null;
-        document.getElementById('login-section').classList.remove('hidden');
-        document.getElementById('admin-panel').classList.add('hidden');
-        document.getElementById('password').value = "";
+    function updateGiftSelect(sid, gid) {
+        const s = document.getElementById(sid).value, gSelect = document.getElementById(gid);
+        gSelect.innerHTML = '';
+        (db[s] || []).forEach(g => {
+            let opt = document.createElement('option');
+            opt.value = g.name; opt.innerText = g.name;
+            gSelect.appendChild(opt);
+        });
+        if (sid === 'supplierSelect') loadQueryData();
     }
 
-    // 更新顯示看板
-    function updateInventoryDisplay() {
-        const name = localStorage.getItem('wedding_item_name') || "未設定";
-        const rule = localStorage.getItem('wedding_date_rule') || "未設定";
-        const display = document.getElementById('inventory-display');
-        
-        let ruleText = "";
-        const rulesMap = {
-            "end_of_12m": "12個月月底",
-            "end_of_13m": "13個月月底",
-            "end_of_14m": "14個月月底",
-            "end_of_15m": "15個月月底",
-            "end_of_18m": "18個月月底",
-            "end_of_24m": "24個月月底",
-            "365days": "365日"
-        };
-        
-        ruleText = rulesMap[rule] || rule;
-
-        display.innerHTML = `
-            <strong>當前項目:</strong> ${name}<br>
-            <strong>預設到期規則:</strong> ${ruleText}<br>
-            <strong>目前庫存:</strong> 0 (需連接數據庫)
-        `;
+    function handlePreview(e) {
+        e.preventDefault();
+        const s = document.getElementById('regSupplierSelect').value, gn = document.getElementById('regGiftSelect').value;
+        const start = document.getElementById('regStart').value, end = document.getElementById('regEnd').value;
+        const config = db[s].find(i => i.name === gn);
+        const count = calculateFinalCount(start, end, config.calcType);
+        const expiry = calculateFinalExpiry(new Date(), config.rule);
+        pendingData = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, startCode: start, endCode: end, expiry, count, user: userEmail };
+        document.getElementById('recRange').innerText = `${start} -> ${end}`;
+        document.getElementById('recCount').innerText = `${count} 張`;
+        document.getElementById('recExpiry').innerText = expiry;
+        document.getElementById('recentRegisterSection').style.display = 'block';
     }
 
-    // 儲存配置到本地
-    function saveConfig() {
-        const name = document.getElementById('item_name').value;
-        const rule = document.getElementById('date_rule').value;
-        const calc = document.getElementById('calc_type').value;
+    function confirmSubmit() {
+        if (!pendingData) return;
 
-        if(!name) { alert("請輸入項目名稱"); return; }
+        const confirmMsg = `請再次核對登記資料：\n\n` +
+                            `供應商：${pendingData.supplier}\n` +
+                            `項目：${pendingData.giftName}\n` +
+                            `範圍：${pendingData.startCode} 至 ${pendingData.endCode}\n` +
+                            `數量：${pendingData.count} 張\n` +
+                            `到期日：${pendingData.expiry}\n\n` +
+                            `確定要正式存檔嗎？`;
 
-        localStorage.setItem('wedding_item_name', name);
-        localStorage.setItem('wedding_date_rule', rule);
-        localStorage.setItem('wedding_calc_type', calc);
-
-        updateInventoryDisplay();
-        alert("配置已儲存至本地瀏覽器");
-    }
-
-    // 處理入庫登記邏輯
-    function processEntry() {
-        const start = document.getElementById('sn_start').value;
-        const end = document.getElementById('sn_end').value;
-        const calcType = document.getElementById('calc_type').value;
-        const rule = document.getElementById('date_rule').value;
-
-        if (!start || !end) {
-            alert("請填寫首尾碼");
-            return;
-        }
-
-        let qty = calculateQuantity(start, end, calcType);
-        let expiryDate = calculateExpiry(rule);
-
-        const confirmMsg = `核對入庫資料：\n\n項目：${localStorage.getItem('wedding_item_name')}\n數量：${qty}\n首碼：${start}\n尾碼：${end}\n預計有效期：${expiryDate}\n\n確定執行新增？`;
-        
         if (confirm(confirmMsg)) {
-            alert("新增成功！\n數量: " + qty + "\n到期日: " + expiryDate);
+            fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'insertRecord', data: pendingData }) });
+            logs.unshift(pendingData); 
+            alert('登記成功！資料已同步。'); 
+            hidePreview(); 
+            document.getElementById('regStart').value = '';
+            document.getElementById('regEnd').value = '';
+            switchPage('supplierPage');
         }
     }
 
-    function calculateQuantity(s, e, type) {
-        let numS = s.replace(/[^0-9]/g, '');
-        let numE = e.replace(/[^0-9]/g, '');
-        
-        if (type === 'suffix_1') {
-            numS = numS.slice(0, -1);
-            numE = numE.slice(0, -1);
-        } else if (type === 'suffix_2') {
-            numS = numS.slice(0, -2);
-            numE = numE.slice(0, -2);
-        }
-        
-        return parseInt(numE) - parseInt(numS) + 1;
+    function addSupplier() {
+        const n = document.getElementById('newSupplierName').value.trim();
+        if (n && !db[n]) { db[n] = []; syncConfig(); document.getElementById('newSupplierName').value = ''; }
     }
 
-    function calculateExpiry(rule) {
-        let d = new Date();
-        if (rule === '365days') {
-            d.setDate(d.getDate() + 365);
-        } else {
-            const monthsMap = {
-                "end_of_12m": 12,
-                "end_of_13m": 13,
-                "end_of_14m": 14,
-                "end_of_15m": 15,
-                "end_of_18m": 18,
-                "end_of_24m": 24
-            };
-            let months = monthsMap[rule] || 12;
-            d.setMonth(d.getMonth() + months + 1);
-            d.setDate(0); 
-        }
-        return d.toISOString().split('T')[0];
+    function addGift() {
+        const s = document.getElementById('belongSupplier').value, n = document.getElementById('newGiftName').value.trim();
+        if (s && n) { db[s].push({ name: n, rule: document.getElementById('newGiftRule').value, calcType: document.getElementById('newGiftCalcType').value }); syncConfig(); document.getElementById('newGiftName').value = ''; }
     }
 
+    function syncConfig() {
+        fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveConfig', data: db }) }).then(() => fetchData());
+    }
+
+    function fetchData() {
+        fetch(`${G_URL}?action=readAll`).then(r => r.json()).then(res => {
+            if (res.config) db = res.config; if (res.records) logs = res.records;
+            const sups = Object.keys(db);
+            ['supplierSelect', 'belongSupplier', 'regSupplierSelect'].forEach(id => {
+                const s = document.getElementById(id); s.innerHTML = '';
+                sups.forEach(k => { let o = document.createElement('option'); o.value = k; o.innerText = k; s.appendChild(o); });
+            });
+            updateGiftSelect('supplierSelect', 'giftSelect'); updateGiftSelect('regSupplierSelect', 'regGiftSelect');
+        });
+    }
+
+    function renderLogs() {
+        const body = document.getElementById('recordsTableBody'); body.innerHTML = '';
+        logs.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${l.timestamp}</td><td>${l.supplier}</td><td>${l.giftName}</td><td>${l.startCode}</td><td>${l.endCode}</td><td>${l.count}</td><td>${l.user.split('@')[0]}</td>`;
+            body.appendChild(tr);
+        });
+    }
+
+    function loadQueryData() {
+        const s = document.getElementById('supplierSelect').value, gn = document.getElementById('giftSelect').value;
+        const last = logs.find(l => l.supplier === s && l.giftName === gn);
+        document.getElementById('infoGiftName').innerText = gn || '-';
+        document.getElementById('infoRange').innerText = last ? `${last.startCode} ~ ${last.endCode}` : '無資料';
+        document.getElementById('infoCount').innerText = last ? `${last.count} 張` : '-';
+        document.getElementById('infoExpiry').innerText = last ? last.expiry : '-';
+    }
+
+    function hidePreview() { document.getElementById('recentRegisterSection').style.display = 'none'; }
+    function logout() { location.reload(); }
 </script>
-
 </body>
 </html>
