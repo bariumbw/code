@@ -118,18 +118,10 @@
             margin-top: 12px;
         }
 
-        button.secondary:hover {
-            background-color: #e8e8ed;
-        }
-
         button.success-btn {
             background-color: #34c759;
             color: #ffffff;
             margin-top: 16px;
-        }
-
-        button.success-btn:hover {
-            background-color: #28a745;
         }
 
         .nav-menu {
@@ -177,10 +169,6 @@
             font-size: 14px;
         }
 
-        .info-row:last-child {
-            margin-bottom: 0;
-        }
-
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -219,17 +207,9 @@
         }
 
         @media (max-width: 600px) {
-            .grid-2 {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-            .nav-menu {
-                flex-wrap: wrap;
-            }
-            .nav-btn {
-                flex: 1 1 40%;
-                text-align: center;
-            }
+            .grid-2 { grid-template-columns: 1fr; gap: 0; }
+            .nav-menu { flex-wrap: wrap; }
+            .nav-btn { flex: 1 1 40%; text-align: center; }
         }
     </style>
 </head>
@@ -241,7 +221,6 @@
             <div id="userInfo" class="user-info"></div>
         </header>
 
-        <!-- 導覽選單 -->
         <div id="navMenu" class="nav-menu" style="display: none;">
             <button class="nav-btn active" onclick="switchPage('supplierPage')">供應商專區</button>
             <button class="nav-btn" id="adminRegTab" onclick="switchPage('registerPage')" style="display: none;">登記券 Code</button>
@@ -249,547 +228,256 @@
             <button class="nav-btn secondary" onclick="logout()" style="margin-top: 0; padding: 8px 16px;">登出</button>
         </div>
 
-        <!-- 1) 統一登入頁 -->
+        <!-- 1) 登入頁 -->
         <div id="loginPage" class="page active">
             <h2>系統登入</h2>
             <form id="loginForm" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <label for="loginEmail">電子郵件 (Email)</label>
-                    <input type="email" id="loginEmail" required placeholder="example@domain.com">
+                    <label>電子郵件 (Email)</label>
+                    <input type="email" id="loginEmail" required>
                 </div>
                 <div class="form-group">
-                    <label for="loginCode">識別碼</label>
-                    <input type="text" id="loginCode" required placeholder="請輸入識別代碼">
+                    <label>識別碼</label>
+                    <input type="text" id="loginCode" required>
                 </div>
                 <button type="submit">登入</button>
             </form>
         </div>
 
-        <!-- 2) 供應商頁 (新增與查詢) -->
+        <!-- 2) 供應商頁 -->
         <div id="supplierPage" class="page">
-            <!-- 管理員專屬：新增供應商與禮券 -->
             <div id="adminAddSection" class="admin-section" style="display: none;">
-                <h2>新增供應商與禮券 (管理員權限)</h2>
+                <h2>新增配置 (管理員)</h2>
                 <div class="grid-2">
                     <div class="form-group">
-                        <label for="newSupplierName">1. 新增供應商名稱</label>
-                        <input type="text" id="newSupplierName" placeholder="例如: 供應商A">
-                        <button type="button" class="secondary" onclick="addSupplier()" style="margin-top: 8px;">確認新增供應商</button>
+                        <label>1. 新增供應商名稱</label>
+                        <input type="text" id="newSupplierName">
+                        <button type="button" class="secondary" onclick="addSupplier()" style="margin-top: 8px;">新增供應商</button>
                     </div>
                     <div class="form-group">
-                        <label for="belongSupplier">2. 選擇隸屬供應商</label>
+                        <label>2. 禮券規則設定</label>
                         <select id="belongSupplier"></select>
-                        
-                        <label for="newGiftName" style="margin-top: 8px;">禮券名稱</label>
-                        <input type="text" id="newGiftName" placeholder="例如: A $50">
-                        
-                        <label for="newGiftRule" style="margin-top: 8px;">預設計算到期日模式</label>
-                        <select id="newGiftRule">
+                        <input type="text" id="newGiftName" placeholder="禮券名稱" style="margin-top: 8px;">
+                        <select id="newGiftRule" style="margin-top: 8px;">
                             <option value="12m_end">12個月月底</option>
                             <option value="13m_end">13個月月底</option>
+                            <option value="14m_end">14個月月底</option>
                             <option value="15m_end">15個月月底</option>
                             <option value="18m_end">18個月月底</option>
                             <option value="24m_end">24個月月底</option>
                             <option value="365d">365日</option>
                         </select>
-
-                        <label for="newGiftCalcType" style="margin-top: 8px;">Code 計算方式</label>
-                        <select id="newGiftCalcType">
-                            <option value="normal">正常計算法 (首尾流水號相減)</option>
-                            <option value="suffix_ignore">尾碼干擾法 (自動忽略最後一位)</option>
+                        <select id="newGiftCalcType" style="margin-top: 8px;">
+                            <option value="normal">正常計算法</option>
+                            <option value="suffix_ignore">特定規則計算法</option>
                         </select>
-                        
-                        <button type="button" class="secondary" onclick="addGift()" style="margin-top: 12px;">確認新增禮券(繫結規則)</button>
+                        <button type="button" class="secondary" onclick="addGift()" style="margin-top: 12px;">確認新增禮券</button>
                     </div>
                 </div>
             </div>
 
-            <h2>供應商券碼查詢</h2>
+            <h2>券碼狀態查詢</h2>
             <div class="grid-2">
                 <div class="form-group">
-                    <label for="supplierSelect">選擇供應商</label>
+                    <label>供應商</label>
                     <select id="supplierSelect" onchange="updateGiftSelect('supplierSelect', 'giftSelect')"></select>
                 </div>
                 <div class="form-group">
-                    <label for="giftSelect">選擇禮券項目</label>
+                    <label>禮券項目</label>
                     <select id="giftSelect" onchange="loadQueryData()"></select>
                 </div>
             </div>
 
             <div class="info-card">
-                <h3>當前最新券碼狀態</h3>
-                <div class="info-row" style="margin-top: 12px;">
-                    <span>指定禮券項目:</span>
-                    <strong id="infoGiftName">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>最後登記範圍:</span>
-                    <strong id="infoRange">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>最後登記數量:</span>
-                    <strong id="infoCount">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>到期日:</span>
-                    <strong id="infoExpiry">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>最新登記時間:</span>
-                    <strong id="infoTime">-</strong>
-                </div>
+                <div class="info-row"><span>指定項目:</span><strong id="infoGiftName">-</strong></div>
+                <div class="info-row"><span>最後範圍:</span><strong id="infoRange">-</strong></div>
+                <div class="info-row"><span>最後數量:</span><strong id="infoCount">-</strong></div>
+                <div class="info-row"><span>到期日:</span><strong id="infoExpiry">-</strong></div>
             </div>
         </div>
 
-        <!-- 3) 登記code 頁 -->
+        <!-- 3) 登記頁 -->
         <div id="registerPage" class="page">
-            <h2>登記新券碼 (管理員權限)</h2>
+            <h2>登記新券碼</h2>
             <form id="registerForm" onsubmit="handlePreview(event)">
                 <div class="grid-2">
                     <div class="form-group">
-                        <label for="regSupplierSelect">選擇供應商</label>
+                        <label>供應商</label>
                         <select id="regSupplierSelect" required onchange="updateGiftSelect('regSupplierSelect', 'regGiftSelect')"></select>
                     </div>
                     <div class="form-group">
-                        <label for="regGiftSelect">選擇禮券項目</label>
+                        <label>禮券項目</label>
                         <select id="regGiftSelect" required onchange="showActiveRule()"></select>
                     </div>
                 </div>
-
-                <div class="form-group" style="background-color: #f5f5f7; padding: 12px; border-radius: 8px;">
-                    <span style="font-size: 14px; color: #1d1d1f; font-weight: 500;">預設到期規則: </span>
-                    <strong id="activeRuleText" style="color: #0071e3; font-size: 14px;">-</strong>
+                <div class="form-group" style="background-color: #f5f5f7; padding: 10px; border-radius: 8px;">
+                    <span style="font-size: 14px;">預設規則: </span><strong id="activeRuleText" style="color: #0071e3;">-</strong>
                 </div>
-                
                 <div class="grid-2">
-                    <div class="form-group">
-                        <label for="regStart">首 Code (例如: TA001 / TB0013)</label>
-                        <input type="text" id="regStart" required placeholder="請輸入首碼" oninput="this.value = this.value.toUpperCase(); hidePreviewCard();">
-                    </div>
-                    <div class="form-group">
-                        <label for="regEnd">尾 Code (例如: TA005 / TB0056)</label>
-                        <input type="text" id="regEnd" required placeholder="請輸入尾碼" oninput="this.value = this.value.toUpperCase(); hidePreviewCard();">
-                    </div>
+                    <div class="form-group"><label>首 Code</label><input type="text" id="regStart" required oninput="this.value = this.value.toUpperCase(); hidePreviewCard();"></div>
+                    <div class="form-group"><label>尾 Code</label><input type="text" id="regEnd" required oninput="this.value = this.value.toUpperCase(); hidePreviewCard();"></div>
                 </div>
-
-                <button type="submit">計算並預覽詳細資訊</button>
+                <button type="submit">計算並顯示詳細資訊</button>
             </form>
 
-            <!-- 先顯示詳細資訊，再由按鈕確認券碼登記 -->
             <div id="recentRegisterSection" class="preview-card" style="display: none;">
-                <h3 style="color: #ff9500; margin-bottom: 12px; font-size: 16px;">請核對本次登記詳細資訊：</h3>
-                <div class="info-row">
-                    <span>預計登記時間:</span>
-                    <strong id="recTime">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>供應商:</span>
-                    <strong id="recSupplier">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>禮券名稱:</span>
-                    <strong id="recGiftName">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>首 Code:</span>
-                    <strong id="recStartCode">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>尾 Code:</span>
-                    <strong id="recEndCode">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>數量:</span>
-                    <strong id="recCount" style="color: #0071e3; font-size: 16px;">-</strong>
-                </div>
-                <div class="info-row">
-                    <span>到期日:</span>
-                    <strong id="recExpiry">-</strong>
-                </div>
-                
-                <!-- 確認登記提交按鈕 -->
+                <h3 style="color: #ff9500; margin-bottom: 12px; font-size: 16px;">請核對登記資訊：</h3>
+                <div class="info-row"><span>供應商:</span><strong id="recSupplier">-</strong></div>
+                <div class="info-row"><span>禮券名稱:</span><strong id="recGiftName">-</strong></div>
+                <div class="info-row"><span>範圍:</span><strong id="recRange">-</strong></div>
+                <div class="info-row"><span>數量:</span><strong id="recCount" style="color:#0071e3; font-size:18px;">-</strong></div>
+                <div class="info-row"><span>計算到期日:</span><strong id="recExpiry">-</strong></div>
                 <button type="button" class="success-btn" onclick="confirmAndSubmitRegister()">確認無誤，正式提交登記</button>
             </div>
         </div>
 
-        <!-- 4) 所有登記紀錄頁 -->
+        <!-- 4) 紀錄頁 -->
         <div id="recordsPage" class="page">
-            <h2>所有登記歷史紀錄</h2>
+            <h2>歷史紀錄</h2>
             <div class="table-responsive">
                 <table>
-                    <thead>
-                        <tr>
-                            <th>登記時間</th>
-                            <th>供應商</th>
-                            <th>禮券名稱</th>
-                            <th>首 Code</th>
-                            <th>尾 Code</th>
-                            <th>到期日</th>
-                            <th>數量</th>
-                            <th>登記人</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recordsTableBody">
-                        <!-- 資料由 JavaScript 動態填入 -->
-                    </tbody>
+                    <thead><tr><th>時間</th><th>供應商</th><th>禮券</th><th>首碼</th><th>尾碼</th><th>到期日</th><th>數量</th><th>登記人</th></tr></thead>
+                    <tbody id="recordsTableBody"></tbody>
                 </table>
             </div>
         </div>
-
     </div>
 
     <script>
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
-
-        let suppliersData = {};
-        let localRecords = [];
-        let currentUser = null;
-        let isAdmin = false;
-        let pendingRecord = null; // 用於暫存預覽中的資料
+        let suppliersData = {}, localRecords = [], currentUser = null, isAdmin = false, pendingRecord = null;
 
         const ruleMapping = {
-            "12m_end": "12個月月底",
-            "13m_end": "13個月月底",
-            "15m_end": "15個月月底",
-            "18m_end": "18個月月底",
-            "24m_end": "24個月月底",
-            "365d": "365日"
+            "12m_end": "12個月月底", "13m_end": "13個月月底", "14m_end": "14個月月底",
+            "15m_end": "15個月月底", "18m_end": "18個月月底", "24m_end": "24個月月底", "365d": "365日"
         };
 
-        // 自動解析編碼流水號並計算數量
         function calculateCodeCount(startCode, endCode, calcType) {
-            let strA = startCode.trim().toUpperCase();
-            let strB = endCode.trim().toUpperCase();
-
+            let s = startCode.trim().toUpperCase(), e = endCode.trim().toUpperCase();
             if (calcType === 'suffix_ignore') {
-                if (strA.length > 1) strA = strA.slice(0, -1);
-                if (strB.length > 1) strB = strB.slice(0, -1);
+                if (s.length > 1) s = s.slice(0, -1);
+                if (e.length > 1) e = e.slice(0, -1);
             }
-
-            const numA = parseInt(strA.replace(/[^0-9]/g, ''), 10);
-            const numB = parseInt(strB.replace(/[^0-9]/g, ''), 10);
-
-            if (isNaN(numA) || isNaN(numB)) {
-                return 0; 
-            }
-
-            return Math.abs(numB - numA) + 1;
+            const nA = parseInt(s.replace(/[^0-9]/g, ''), 10), nB = parseInt(e.replace(/[^0-9]/g, ''), 10);
+            return isNaN(nA) || isNaN(nB) ? 0 : Math.abs(nB - nA) + 1;
         }
 
-        // 自動推算到期日
         function calculateExpiryDate(startDate, rule) {
-            let year = startDate.getFullYear();
-            let month = startDate.getMonth(); 
-
             if (rule === '365d') {
-                let resultDate = new Date(startDate.getTime());
-                resultDate.setDate(resultDate.getDate() + 365);
-                return resultDate.toISOString().split('T')[0];
+                let d = new Date(startDate.getTime()); d.setDate(d.getDate() + 365);
+                return d.toISOString().split('T')[0];
             }
-
-            let monthsToAdd = 12;
-            if (rule === '13m_end') monthsToAdd = 13;
-            if (rule === '15m_end') monthsToAdd = 15;
-            if (rule === '18m_end') monthsToAdd = 18;
-            if (rule === '24m_end') monthsToAdd = 24;
-
-            let targetDate = new Date(year, month + monthsToAdd + 1, 0);
-            return targetDate.toISOString().split('T')[0];
-        }
-
-        function getFormattedTimestamp() {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            let mAdd = parseInt(rule.replace('m_end', ''), 10) || 12;
+            let d = new Date(startDate.getFullYear(), startDate.getMonth() + mAdd + 1, 0);
+            return d.toISOString().split('T')[0];
         }
 
         function initDropdowns() {
-            populateSelectWithOptions('supplierSelect', Object.keys(suppliersData));
-            populateSelectWithOptions('belongSupplier', Object.keys(suppliersData));
-            populateSelectWithOptions('regSupplierSelect', Object.keys(suppliersData));
-
+            const keys = Object.keys(suppliersData);
+            populateSelect('supplierSelect', keys);
+            populateSelect('belongSupplier', keys);
+            populateSelect('regSupplierSelect', keys);
             updateGiftSelect('supplierSelect', 'giftSelect');
             updateGiftSelect('regSupplierSelect', 'regGiftSelect');
         }
 
-        function populateSelectWithOptions(selectId, optionsArray) {
-            const selectEl = document.getElementById(selectId);
-            selectEl.innerHTML = '';
-            optionsArray.forEach(opt => {
-                const el = document.createElement('option');
-                el.value = opt;
-                el.innerText = opt;
-                selectEl.appendChild(el);
-            });
+        function populateSelect(id, opts) {
+            const s = document.getElementById(id); s.innerHTML = '';
+            opts.forEach(o => { const e = document.createElement('option'); e.value = o; e.innerText = o; s.appendChild(e); });
         }
 
-        function updateGiftSelect(supplierSelectId, giftSelectId) {
-            const supplierVal = document.getElementById(supplierSelectId).value;
-            const gifts = suppliersData[supplierVal] || [];
-            const selectEl = document.getElementById(giftSelectId);
-            selectEl.innerHTML = '';
-            
-            gifts.forEach(giftObj => {
-                const el = document.createElement('option');
-                el.value = giftObj.name;
-                el.innerText = `${giftObj.name} (${ruleMapping[giftObj.rule] || '未指定'})`;
-                selectEl.appendChild(el);
-            });
-            
-            if(supplierSelectId === 'supplierSelect') {
-                loadQueryData();
-            } else if(supplierSelectId === 'regSupplierSelect') {
-                showActiveRule();
-            }
+        function updateGiftSelect(sId, gId) {
+            const val = document.getElementById(sId).value;
+            const gifts = suppliersData[val] || [];
+            const s = document.getElementById(gId); s.innerHTML = '';
+            gifts.forEach(g => { const e = document.createElement('option'); e.value = g.name; e.innerText = `${g.name} (${ruleMapping[g.rule] || ''})`; s.appendChild(e); });
+            if(sId === 'supplierSelect') loadQueryData(); else showActiveRule();
         }
 
         function showActiveRule() {
-            const supplier = document.getElementById('regSupplierSelect').value;
-            const giftName = document.getElementById('regGiftSelect').value;
-            const gifts = suppliersData[supplier] || [];
-            const found = gifts.find(g => g.name === giftName);
-            
-            if (found) {
-                document.getElementById('activeRuleText').innerText = ruleMapping[found.rule] || '未指定';
-            } else {
-                document.getElementById('activeRuleText').innerText = '-';
-            }
+            const s = document.getElementById('regSupplierSelect').value;
+            const gn = document.getElementById('regGiftSelect').value;
+            const found = (suppliersData[s] || []).find(g => g.name === gn);
+            document.getElementById('activeRuleText').innerText = found ? ruleMapping[found.rule] : '-';
             hidePreviewCard();
         }
 
-        function hidePreviewCard() {
-            document.getElementById('recentRegisterSection').style.display = 'none';
-            pendingRecord = null;
+        function hidePreviewCard() { document.getElementById('recentRegisterSection').style.display = 'none'; pendingRecord = null; }
+
+        function switchPage(p) {
+            document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+            document.getElementById(p).classList.add('active');
+            if (p === 'recordsPage') renderRecordsTable();
         }
 
-        function switchPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(pageId).classList.add('active');
-            
-            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => btn.getAttribute('onclick').includes(pageId));
-            if (activeBtn) activeBtn.classList.add('active');
-
-            if (pageId === 'recordsPage') {
-                renderRecordsTable();
-            }
-            if (pageId === 'registerPage') {
-                showActiveRule();
-            }
-        }
-
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
-            const code = document.getElementById('loginCode').value.trim();
-
-            if (!email || !code) return;
-
-            currentUser = email;
-            
-            if (email === 'support@bespoke-mall.com') {
-                isAdmin = true;
-                document.getElementById('adminRegTab').style.display = 'block';
-                document.getElementById('adminAddSection').style.display = 'block';
-            } else {
-                isAdmin = false;
-                document.getElementById('adminRegTab').style.display = 'none';
-                document.getElementById('adminAddSection').style.display = 'none';
-            }
-
-            document.getElementById('userInfo').innerText = `使用者: ${email} ${isAdmin ? '(管理員)' : ''}`;
+        function handleLogin(e) {
+            e.preventDefault();
+            currentUser = document.getElementById('loginEmail').value.trim().toLowerCase();
+            isAdmin = (currentUser === 'support@bespoke-mall.com');
+            document.getElementById('adminRegTab').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('adminAddSection').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('userInfo').innerText = `使用者: ${currentUser}`;
             document.getElementById('loginPage').classList.remove('active');
             document.getElementById('navMenu').style.display = 'flex';
-            
-            fetchDataFromGoogleSheet();
-            switchPage('supplierPage');
+            fetchData(); switchPage('supplierPage');
         }
 
-        function logout() {
-            currentUser = null;
-            isAdmin = false;
-            document.getElementById('userInfo').innerText = '';
-            document.getElementById('navMenu').style.display = 'none';
-            hidePreviewCard();
-            document.getElementById('loginForm').reset();
-            switchPage('loginPage');
-        }
+        function logout() { location.reload(); }
 
-        function addSupplier() {
-            const name = document.getElementById('newSupplierName').value.trim();
-            if (!name) return;
-            if (!suppliersData[name]) {
-                suppliersData[name] = [];
-                uploadConfigToGoogleSheet();
-                document.getElementById('newSupplierName').value = '';
-            } else {
-                alert('此供應商已被建立。');
-            }
-        }
-
-        function addGift() {
-            const supplier = document.getElementById('belongSupplier').value;
-            const giftName = document.getElementById('newGiftName').value.trim();
-            const rule = document.getElementById('newGiftRule').value;
-            const calcType = document.getElementById('newGiftCalcType').value;
-            if (!supplier || !giftName) return;
+        function handlePreview(e) {
+            e.preventDefault();
+            const s = document.getElementById('regSupplierSelect').value, gn = document.getElementById('regGiftSelect').value;
+            const start = document.getElementById('regStart').value, end = document.getElementById('regEnd').value;
+            const gift = (suppliersData[s] || []).find(g => g.name === gn);
+            const count = calculateCodeCount(start, end, gift.calcType);
+            const expiry = calculateExpiryDate(new Date(), gift.rule);
             
-            const gifts = suppliersData[supplier] || [];
-            const exists = gifts.some(g => g.name === giftName);
+            pendingRecord = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, startCode: start, endCode: end, expiry: expiry, count: count, user: currentUser };
             
-            if (!exists) {
-                suppliersData[supplier].push({ name: giftName, rule: rule, calcType: calcType });
-                uploadConfigToGoogleSheet();
-                document.getElementById('newGiftName').value = '';
-            } else {
-                alert('該供應商之下已存在相同名稱之禮券。');
-            }
-        }
-
-        function loadQueryData() {
-            const supplier = document.getElementById('supplierSelect').value;
-            const gift = document.getElementById('giftSelect').value;
-            
-            document.getElementById('infoGiftName').innerText = gift ? `${supplier} - ${gift}` : '-';
-
-            const matchedRecord = localRecords.find(r => r.supplier === supplier && r.giftName === gift);
-
-            if (matchedRecord) {
-                document.getElementById('infoRange').innerText = `${matchedRecord.startCode} 至 ${matchedRecord.endCode}`;
-                document.getElementById('infoCount').innerText = `${matchedRecord.count || 0} 張`;
-                document.getElementById('infoExpiry').innerText = matchedRecord.expiry;
-                document.getElementById('infoTime').innerText = matchedRecord.timestamp;
-            } else {
-                document.getElementById('infoRange').innerText = '暫無登記範圍';
-                document.getElementById('infoCount').innerText = '0 張';
-                document.getElementById('infoExpiry').innerText = '暫無資料';
-                document.getElementById('infoTime').innerText = '-';
-            }
-        }
-
-        // 第一步：使用者輸入完畢，點擊計算後只先「顯示詳細資訊」
-        function handlePreview(event) {
-            event.preventDefault();
-            
-            const supplier = document.getElementById('regSupplierSelect').value;
-            const giftName = document.getElementById('regGiftSelect').value;
-            const startCode = document.getElementById('regStart').value.trim().toUpperCase();
-            const endCode = document.getElementById('regEnd').value.trim().toUpperCase();
-
-            const gifts = suppliersData[supplier] || [];
-            const foundGift = gifts.find(g => g.name === giftName);
-            const rule = foundGift ? foundGift.rule : '12m_end'; 
-            const calcType = foundGift ? foundGift.calcType : 'normal';
-
-            const totalCount = calculateCodeCount(startCode, endCode, calcType);
-            const now = new Date();
-            const expiryDateStr = calculateExpiryDate(now, rule);
-            const timestampStr = getFormattedTimestamp();
-
-            // 暫存資料於記憶體
-            pendingRecord = {
-                timestamp: timestampStr,
-                supplier: supplier,
-                giftName: giftName,
-                startCode: startCode,
-                endCode: endCode,
-                expiry: expiryDateStr,
-                count: totalCount,
-                user: currentUser
-            };
-
-            // 更新預覽區塊中的明細資訊
-            document.getElementById('recTime').innerText = timestampStr;
-            document.getElementById('recSupplier').innerText = supplier;
-            document.getElementById('recGiftName').innerText = giftName;
-            document.getElementById('recStartCode').innerText = startCode;
-            document.getElementById('recEndCode').innerText = endCode;
-            document.getElementById('recCount').innerText = `${totalCount} 張`;
-            document.getElementById('recExpiry').innerText = expiryDateStr;
-            
-            // 秀出預覽確認區塊
+            document.getElementById('recSupplier').innerText = s;
+            document.getElementById('recGiftName').innerText = gn;
+            document.getElementById('recRange').innerText = `${start} - ${end}`;
+            document.getElementById('recCount').innerText = `${count} 張`;
+            document.getElementById('recExpiry').innerText = expiry;
             document.getElementById('recentRegisterSection').style.display = 'block';
         }
 
-        // 第二步：使用者點選按鈕「確認無誤，正式提交登記」
         function confirmAndSubmitRegister() {
             if (!pendingRecord) return;
-
-            // 正式同步上傳至雲端試算表
-            uploadRecordToGoogleSheet(pendingRecord);
-
-            alert('✓ 券碼登記已成功提交並完成雲端同步！');
-
-            // 清空輸入框
-            document.getElementById('regStart').value = '';
-            document.getElementById('regEnd').value = '';
+            fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'insertRecord', data: pendingRecord })});
+            localRecords.unshift(pendingRecord);
+            alert('登記成功！');
+            document.getElementById('registerForm').reset();
             hidePreviewCard();
         }
 
+        function addSupplier() {
+            const n = document.getElementById('newSupplierName').value.trim();
+            if (n && !suppliersData[n]) { suppliersData[n] = []; saveConfig(); }
+        }
+
+        function addGift() {
+            const s = document.getElementById('belongSupplier').value, n = document.getElementById('newGiftName').value.trim();
+            if (s && n) { suppliersData[s].push({ name: n, rule: document.getElementById('newGiftRule').value, calcType: document.getElementById('newGiftCalcType').value }); saveConfig(); }
+        }
+
+        function saveConfig() { fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveConfig', data: suppliersData })}).then(() => initDropdowns()); }
+
+        function fetchData() {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=readAll`).then(r => r.json()).then(res => {
+                if(res.config) suppliersData = res.config;
+                if(res.records) localRecords = res.records;
+                initDropdowns();
+            });
+        }
+
         function renderRecordsTable() {
-            const tbody = document.getElementById('recordsTableBody');
-            tbody.innerHTML = '';
-
-            if (localRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #666666;">暫無歷史紀錄</td></tr>';
-                return;
-            }
-
-            localRecords.forEach(record => {
+            const b = document.getElementById('recordsTableBody'); b.innerHTML = '';
+            localRecords.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${record.timestamp}</td>
-                    <td>${record.supplier}</td>
-                    <td>${record.giftName}</td>
-                    <td>${record.startCode}</td>
-                    <td>${record.endCode}</td>
-                    <td>${record.expiry}</td>
-                    <td><strong>${record.count || 0}</strong></td>
-                    <td>${record.user}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // ================= Google Sheets 數據同步 =================
-
-        function uploadRecordToGoogleSheet(recordData) {
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'insertRecord', data: recordData })
-            }).then(() => {
-                localRecords.unshift(recordData);
-            });
-        }
-
-        function uploadConfigToGoogleSheet() {
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'saveConfig', data: suppliersData })
-            }).then(() => {
-                initDropdowns();
-                alert('系統已完成雲端同步！其他協同使用者將可即時共用此配置。');
-            });
-        }
-
-        function fetchDataFromGoogleSheet() {
-            fetch(`${GOOGLE_SCRIPT_URL}?action=readAll`)
-            .then(response => response.json())
-            .then(res => {
-                if(res.config && Object.keys(res.config).length > 0) {
-                    suppliersData = res.config;
-                }
-                if(res.records) {
-                    localRecords = res.records;
-                }
-                initDropdowns();
-            })
-            .catch(err => {
-                console.log("正在同步資料或尚無配置紀錄");
+                tr.innerHTML = `<td>${r.timestamp}</td><td>${r.supplier}</td><td>${r.giftName}</td><td>${r.startCode}</td><td>${r.endCode}</td><td>${r.expiry}</td><td>${r.count}</td><td>${r.user}</td>`;
+                b.appendChild(tr);
             });
         }
     </script>
