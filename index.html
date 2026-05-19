@@ -1,505 +1,449 @@
 <!DOCTYPE html>
-
 <html lang="zh-Hant">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Wedding Command Center | 安全加強版</title>
-
+    <title>券碼管理與登記系統</title>
     <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-        * { box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 0; }
+        body {
+            background-color: #f5f5f7;
+            color: #333333;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
 
-        body { background-color: #f5f5f7; color: #1d1d1f; padding: 15px; }
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
 
-        .container { width: 100%; max-width: 1000px; background: #fff; border-radius: 16px; margin: auto; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        header {
+            border-bottom: 1px solid #e5e5e7;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        header { border-bottom: 1px solid #e5e5e7; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        h1 { font-size: 20px; color: #1d1d1f; }
+        h2 { font-size: 18px; color: #1d1d1f; margin-bottom: 16px; }
 
-        h1 { font-size: 20px; }
+        .nav-menu {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: #fbfbfd;
+            padding: 8px;
+            border-radius: 10px;
+        }
 
-        .nav-menu { display: flex; gap: 10px; margin-bottom: 20px; background: #f5f5f7; padding: 6px; border-radius: 12px; }
+        .nav-btn {
+            flex: 1;
+            min-width: 100px;
+            background-color: #ffffff;
+            color: #1d1d1f;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid #d2d2d7;
+            transition: all 0.2s ease;
+            text-align: center;
+            white-space: nowrap;
+        }
 
-        .nav-btn { flex: 1; border: none; padding: 10px; border-radius: 8px; cursor: pointer; background: transparent; font-weight: 500; }
+        .nav-btn.active {
+            background-color: #0071e3;
+            color: #ffffff;
+            border-color: #0071e3;
+        }
 
-        .nav-btn.active { background: #fff; color: #0071e3; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav-btn:hover:not(.active) {
+            background-color: #f5f5f7;
+        }
+
+        .nav-btn.logout-btn {
+            color: #ff3b30;
+            border-color: #ff3b30;
+            flex: 0 1 auto;
+        }
 
         .page { display: none; }
-
         .page.active { display: block; }
 
-        .form-group { margin-bottom: 15px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; }
 
-        label { display: block; margin-bottom: 5px; font-size: 14px; color: #86868b; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #ffffff;
+            outline: none;
+        }
 
-        input, select { width: 100%; padding: 12px; border: 1px solid #d2d2d7; border-radius: 10px; font-size: 16px; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button.primary-action {
+            width: 100%;
+            padding: 14px;
+            background-color: #0071e3;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
-        .primary-action { width: 100%; padding: 14px; background: #0071e3; color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .info-card, .preview-card {
+            background-color: #f9f9fb;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #0071e3;
+        }
 
-        .preview-card { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid #e5e5e7; margin-top: 20px; }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
 
-        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
 
-        th, td { padding: 12px; border-bottom: 1px solid #e5e5e7; text-align: left; font-size: 14px; }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e5e7;
+            text-align: left;
+        }
 
-        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .nav-menu { flex-wrap: wrap; } }
+        th { background-color: #f5f5f7; }
 
+        .admin-box {
+            background-color: #fffef0;
+            border: 1px dashed #ffcc00;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .nav-btn { flex: 1 1 45%; }
+        }
     </style>
-
 </head>
-
 <body>
 
-
-
 <div class="container">
-
     <header>
-
         <h1>Wedding Command Center</h1>
-
-        <div id="userTag" style="font-size: 12px; color: #86868b;"></div>
-
+        <div id="userInfo" style="font-size: 12px; color: #86868b;"></div>
     </header>
 
-
-
-    <nav id="navBar" class="nav-menu" style="display: none;">
-
-        <button class="nav-btn active" onclick="showPage('stockPage')">庫存查詢</button>
-
-        <button class="nav-btn" onclick="showPage('regPage')">入庫登記</button>
-
-        <button class="nav-btn" onclick="showPage('logPage')">紀錄清單</button>
-
-        <button class="nav-btn" onclick="location.reload()">登出</button>
-
+    <nav id="navMenu" class="nav-menu" style="display: none;">
+        <button class="nav-btn active" onclick="switchPage('supplierPage')">即時庫存查詢</button>
+        <button class="nav-btn" id="adminRegTab" onclick="switchPage('registerPage')" style="display: none;">登記新券入庫</button>
+        <button class="nav-btn" onclick="switchPage('recordsPage')">歷史登記紀錄</button>
+        <button class="nav-btn logout-btn" onclick="logout()">安全登出</button>
     </nav>
 
-
-
-    <!-- 登入頁面 (加入驗證邏輯) -->
-
+    <!-- 1) 登入頁面 -->
     <div id="loginPage" class="page active">
-
-        <h2 style="margin-bottom:20px;">🔒 安全驗證</h2>
-
-        <form onsubmit="doLogin(event)">
-
-            <div class="form-group"><label>Email</label><input type="email" id="uMail" required placeholder="example@bespoke-mall.com"></div>
-
-            <div class="form-group"><label>通行代碼</label><input type="password" id="uPass" required placeholder="請輸入密碼"></div>
-
-            <button type="submit" class="primary-action">經驗證進入系統</button>
-
+        <h2>系統驗證</h2>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label>帳號 (Email)</label>
+                <input type="email" id="loginEmail" required placeholder="請輸入 Email">
+            </div>
+            <div class="form-group">
+                <label>通行碼</label>
+                <input type="password" id="loginCode" required placeholder="請輸入密碼">
+            </div>
+            <button type="submit" class="primary-action">登入系統</button>
         </form>
-
     </div>
 
-
-
-    <!-- 庫存頁面 -->
-
-    <div id="stockPage" class="page">
-
-        <div id="adminPanel" style="display:none; background:#f9f9fb; padding:15px; border-radius:12px; margin-bottom:20px; border:1px dashed #d2d2d7;">
-
-            <h3 style="font-size:14px; margin-bottom:10px;">⚙️ 管理員設定</h3>
-
+    <!-- 2) 查詢頁面 -->
+    <div id="supplierPage" class="page">
+        <div id="adminAddSection" class="admin-box" style="display: none;">
+            <h2 style="font-size:15px; color: #856404;">⚙️ 管理員配置</h2>
             <div class="grid-2">
-
-                <div>
-
+                <div class="form-group">
                     <label>新增供應商</label>
-
-                    <input type="text" id="newSup" placeholder="名稱">
-
-                    <button class="primary-action" onclick="addSup()" style="padding:8px;">新增</button>
-
+                    <input type="text" id="newSupplierName" placeholder="供應商名稱">
+                    <button type="button" style="margin-top:8px" onclick="addSupplier()">執行新增</button>
                 </div>
-
-                <div>
-
-                    <label>定義禮券規則</label>
-
-                    <select id="selSupForGift"></select>
-
-                    <input type="text" id="newGName" placeholder="禮券名稱" style="margin-top:5px;">
-
-                    <select id="newGRule" style="margin-top:5px;">
-
+                <div class="form-group">
+                    <label>新增禮券規則</label>
+                    <select id="belongSupplier" style="margin-bottom:5px"></select>
+                    <input type="text" id="newGiftName" placeholder="禮券名稱" style="margin-bottom:5px">
+                    <select id="newGiftRule" style="margin-bottom:5px">
                         <option value="12m_end">12個月月底</option>
-
                         <option value="13m_end">13個月月底</option>
-
                         <option value="14m_end">14個月月底</option>
-
                         <option value="15m_end">15個月月底</option>
-
                         <option value="18m_end">18個月月底</option>
-
                         <option value="24m_end">24個月月底</option>
-
                         <option value="365d">365日</option>
-
                     </select>
-
-                    <button class="primary-action" onclick="addGiftRule()" style="padding:8px;">儲存規則</button>
-
+                    <select id="newGiftCalcType">
+                        <option value="normal">正常 (首尾相減)</option>
+                        <option value="suffix_1">尾碼干擾 1</option>
+                        <option value="suffix_2">尾碼干擾 2</option>
+                    </select>
+                    <button type="button" style="margin-top:8px" onclick="addGift()">儲存禮券</button>
                 </div>
-
             </div>
-
         </div>
 
-
-
-        <h2>目前存量查詢</h2>
-
+        <h2>庫存狀態查詢</h2>
         <div class="grid-2">
-
-            <div class="form-group"><label>供應商</label><select id="s1" onchange="syncG('s1','g1')"></select></div>
-
-            <div class="form-group"><label>禮券項目</label><select id="g1" onchange="refreshStock()"></select></div>
-
+            <div class="form-group">
+                <label>供應商</label>
+                <select id="supplierSelect" onchange="updateGiftSelect('supplierSelect', 'giftSelect')"></select>
+            </div>
+            <div class="form-group">
+                <label>禮券項目</label>
+                <select id="giftSelect" onchange="loadQueryData()"></select>
+            </div>
         </div>
-
-        <div class="preview-card" style="border-left: 5px solid #34c759;">
-
-            <div class="info-row"><span>存量:</span><strong id="vCount">-</strong></div>
-
-            <div class="info-row"><span>有效日期:</span><strong id="vExp">-</strong></div>
-
+        <div class="info-card">
+            <div class="info-row"><span>項目名稱:</span><strong id="infoGiftName">-</strong></div>
+            <div class="info-row"><span>最新入庫段:</span><strong id="infoRange">-</strong></div>
+            <div class="info-row"><span>庫存量:</span><strong id="infoCount">-</strong></div>
+            <div class="info-row"><span>有效日期:</span><strong id="infoExpiry">-</strong></div>
         </div>
-
     </div>
 
-
-
-    <!-- 登記頁面 -->
-
-    <div id="regPage" class="page">
-
-        <h2>入庫登記</h2>
-
-        <form onsubmit="preView(event)">
-
+    <!-- 3) 登記頁面 -->
+    <div id="registerPage" class="page">
+        <h2>新券碼登記</h2>
+        <form onsubmit="handlePreview(event)">
             <div class="grid-2">
-
-                <div class="form-group"><label>供應商</label><select id="s2" onchange="syncG('s2','g2')"></select></div>
-
-                <div class="form-group"><label>禮券項目</label><select id="g2"></select></div>
-
+                <div class="form-group">
+                    <label>供應商</label>
+                    <select id="regSupplierSelect" onchange="updateGiftSelect('regSupplierSelect', 'regGiftSelect')"></select>
+                </div>
+                <div class="form-group">
+                    <label>項目</label>
+                    <select id="regGiftSelect" onchange="hidePreview()"></select>
+                </div>
             </div>
-
             <div class="grid-2">
-
-                <div class="form-group"><label>起始號碼</label><input type="text" id="cStart" required></div>
-
-                <div class="form-group"><label>結束號碼</label><input type="text" id="cEnd" required></div>
-
+                <div class="form-group">
+                    <label>首碼 (Start Code)</label>
+                    <input type="text" id="regStart" required oninput="this.value=this.value.toUpperCase(); hidePreview();">
+                </div>
+                <div class="form-group">
+                    <label>尾碼 (End Code)</label>
+                    <input type="text" id="regEnd" required oninput="this.value=this.value.toUpperCase(); hidePreview();">
+                </div>
             </div>
-
-            <button type="submit" class="primary-action" style="background:#1d1d1f;">預覽計算</button>
-
+            <button type="submit" class="primary-action" style="background-color:#1d1d1f">計算預覽</button>
         </form>
 
-        <div id="preBox" class="preview-card" style="display:none; border-left: 5px solid #0071e3;">
-
-            <div class="info-row"><span>計算數量:</span><strong id="pCount">0</strong></div>
-
-            <div class="info-row"><span>預測有效期:</span><strong id="pExp">-</strong></div>
-
-            <button class="primary-action" onclick="finalCommit()" style="background:#34c759;">確認存檔</button>
-
+        <div id="recentRegisterSection" class="preview-card" style="display: none; margin-top: 20px; border-left-color: #ff9500;">
+            <h3>🔍 登記確認</h3>
+            <div class="info-row"><span>範圍:</span><strong id="recRange">-</strong></div>
+            <div class="info-row"><span>計算總數:</span><strong id="recCount" style="color:#0071e3; font-size:18px;">-</strong></div>
+            <div class="info-row"><span>有效至:</span><strong id="recExpiry">-</strong></div>
+            <button type="button" class="primary-action" style="background-color:#34c759; margin-top:10px;" onclick="confirmSubmit()">確認正式存檔</button>
         </div>
-
     </div>
 
-
-
-    <!-- 紀錄頁面 -->
-
-    <div id="logPage" class="page">
-
-        <h2>歷史登記紀錄</h2>
-
-        <div style="overflow-x:auto;">
-
+    <!-- 4) 紀錄頁面 -->
+    <div id="recordsPage" class="page">
+        <h2>流水帳紀錄</h2>
+        <div class="table-responsive">
             <table>
-
-                <thead><tr><th>時間</th><th>項目</th><th>數量</th><th>經手人</th></tr></thead>
-
-                <tbody id="logBody"></tbody>
-
+                <thead>
+                    <tr>
+                        <th>時間</th>
+                        <th>供應商</th>
+                        <th>項目</th>
+                        <th>首碼</th>
+                        <th>尾碼</th>
+                        <th>數量</th>
+                        <th>經手</th>
+                    </tr>
+                </thead>
+                <tbody id="recordsTableBody"></tbody>
             </table>
-
         </div>
-
     </div>
-
 </div>
 
-
-
 <script>
+    const G_URL = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
+    let db = {}, logs = [], userEmail = null, isAdmin = false, pendingData = null;
 
-    const API = 'https://script.google.com/macros/s/AKfycbxfnefSEqBZBdz8JTH54XqvHSSlYinLQRxHEwBYJfROiOoG5MvxrFsQ-dXVS_SKab2a/exec';
+    function calculateFinalCount(start, end, type) {
+        let a = start.trim().toUpperCase(), b = end.trim().toUpperCase();
+        if (type === 'suffix_1') { a = a.slice(0, -1); b = b.slice(0, -1); }
+        else if (type === 'suffix_2') { a = a.slice(0, -2); b = b.slice(0, -2); }
+        const nA = parseInt(a.replace(/[^0-9]/g, ''), 10), nB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+        return isNaN(nA) || isNaN(nB) ? 0 : Math.abs(nB - nA) + 1;
+    }
 
-    let dataMap = {}, history = [], curUser = '', pending = null;
+    function calculateFinalExpiry(today, rule) {
+        let d = new Date(today);
+        if (rule === '365d') { d.setDate(d.getDate() + 365); return d.toISOString().split('T')[0]; }
+        let months = parseInt(rule) || 12;
+        return new Date(d.getFullYear(), d.getMonth() + months + 1, 0).toISOString().split('T')[0];
+    }
 
-
-
-    // 🔒 登入驗證修正
-
-    function doLogin(e) {
-
+    function handleLogin(e) {
         e.preventDefault();
-
-        const mail = document.getElementById('uMail').value;
-
-        const pass = document.getElementById('uPass').value;
-
-
-
-        // ⚠️ 請修改此處的密碼 ⚠️
-
-        const MASTER_PASSWORD = "YOUR_SECURE_PASSWORD"; 
-
-
-
-        if (pass === MASTER_PASSWORD) {
-
-            curUser = mail;
-
-            document.getElementById('navBar').style.display = 'flex';
-
-            document.getElementById('loginPage').classList.remove('active');
-
-            document.getElementById('userTag').innerText = curUser;
-
-            if(curUser === 'support@bespoke-mall.com') document.getElementById('adminPanel').style.display = 'block';
-
-            loadDB();
-
-            showPage('stockPage');
-
-        } else {
-
-            alert("通行代碼不正確，請重新輸入！");
-
-            document.getElementById('uPass').value = '';
-
-        }
-
+        userEmail = document.getElementById('loginEmail').value.trim().toLowerCase();
+        isAdmin = (userEmail === 'support@bespoke-mall.com');
+        document.getElementById('navMenu').style.display = 'flex';
+        document.getElementById('adminRegTab').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminAddSection').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('userInfo').innerText = userEmail;
+        document.getElementById('loginPage').classList.remove('active');
+        fetchData();
+        switchPage('supplierPage');
     }
 
-
-
-    function getExpDate(rule) {
-
-        let now = new Date();
-
-        if (rule === '365d') {
-
-            now.setDate(now.getDate() + 365);
-
-            return now.toISOString().split('T')[0];
-
-        }
-
-        let m = parseInt(rule.match(/\d+/)) || 12;
-
-        let target = new Date(now.getFullYear(), now.getMonth() + m + 1, 0);
-
-        return target.toISOString().split('T')[0];
-
-    }
-
-
-
-    function showPage(id) {
-
+    function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-        document.getElementById(id).classList.add('active');
-
+        document.getElementById(pageId).classList.add('active');
+        const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(pageId));
+        if (btn) btn.classList.add('active');
+        if (pageId === 'recordsPage') renderLogs();
     }
 
-
-
-    function loadDB() {
-
-        fetch(`${API}?action=readAll`).then(r => r.json()).then(res => {
-
-            dataMap = res.config || {};
-
-            history = res.records || [];
-
-            updateSelectors();
-
-            refreshStock();
-
-            renderLogs();
-
+    function updateGiftSelect(sid, gid) {
+        const s = document.getElementById(sid).value, gSelect = document.getElementById(gid);
+        gSelect.innerHTML = '';
+        (db[s] || []).forEach(g => {
+            let opt = document.createElement('option');
+            opt.value = g.name; opt.innerText = g.name;
+            gSelect.appendChild(opt);
         });
-
+        if (sid === 'supplierSelect') loadQueryData();
     }
 
-
-
-    function updateSelectors() {
-
-        const sups = Object.keys(dataMap);
-
-        ['s1', 's2', 'selSupForGift'].forEach(id => {
-
-            const el = document.getElementById(id);
-
-            el.innerHTML = '';
-
-            sups.forEach(s => el.add(new Option(s, s)));
-
-        });
-
-        syncG('s1','g1');
-
-        syncG('s2','g2');
-
-    }
-
-
-
-    function syncG(sid, gid) {
-
-        const s = document.getElementById(sid).value;
-
-        const g = document.getElementById(gid);
-
-        g.innerHTML = '';
-
-        if(dataMap[s]) dataMap[s].forEach(i => g.add(new Option(i.name, i.name)));
-
-    }
-
-
-
-    function preView(e) {
-
+    function handlePreview(e) {
         e.preventDefault();
-
-        const s = document.getElementById('s2').value;
-
-        const gn = document.getElementById('g2').value;
-
-        const st = document.getElementById('cStart').value;
-
-        const en = document.getElementById('cEnd').value;
-
-        const rule = dataMap[s].find(x => x.name === gn).rule;
-
-        const count = Math.abs(parseInt(en.replace(/\D/g,'')) - parseInt(st.replace(/\D/g,''))) + 1;
-
-        const exp = getExpDate(rule);
-
-        pending = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, count: count, expiry: exp, user: curUser };
-
-        document.getElementById('pCount').innerText = count;
-
-        document.getElementById('pExp').innerText = exp;
-
-        document.getElementById('preBox').style.display = 'block';
-
+        const s = document.getElementById('regSupplierSelect').value, gn = document.getElementById('regGiftSelect').value;
+        const start = document.getElementById('regStart').value, end = document.getElementById('regEnd').value;
+        const config = db[s].find(i => i.name === gn);
+        const count = calculateFinalCount(start, end, config.calcType);
+        const expiry = calculateFinalExpiry(new Date(), config.rule);
+        pendingData = { timestamp: new Date().toLocaleString(), supplier: s, giftName: gn, startCode: start, endCode: end, expiry, count, user: userEmail };
+        document.getElementById('recRange').innerText = `${start} -> ${end}`;
+        document.getElementById('recCount').innerText = `${count} 張`;
+        document.getElementById('recExpiry').innerText = expiry;
+        document.getElementById('recentRegisterSection').style.display = 'block';
     }
 
+    // 核心更改：加入彈出式視窗確認
+    function confirmSubmit() {
+        if (!pendingData) return;
 
+        const confirmMsg = `請再次核對登記資料：\n\n` +
+                           `供應商：${pendingData.supplier}\n` +
+                           `項目：${pendingData.giftName}\n` +
+                           `範圍：${pendingData.startCode} 至 ${pendingData.endCode}\n` +
+                           `數量：${pendingData.count} 張\n` +
+                           `到期日：${pendingData.expiry}\n\n` +
+                           `確定要正式存檔嗎？`;
 
-    function finalCommit() {
-
-        fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'insertRecord', data: pending }) });
-
-        history.unshift(pending);
-
-        alert('入庫成功');
-
-        document.getElementById('preBox').style.display = 'none';
-
-        renderLogs();
-
-        showPage('logPage');
-
+        if (confirm(confirmMsg)) {
+            fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'insertRecord', data: pendingData }) });
+            logs.unshift(pendingData); 
+            alert('登記成功！資料已同步。'); 
+            hidePreview(); 
+            document.getElementById('regStart').value = '';
+            document.getElementById('regEnd').value = '';
+            switchPage('supplierPage');
+        }
     }
 
+    function addSupplier() {
+        const n = document.getElementById('newSupplierName').value.trim();
+        if (n && !db[n]) { db[n] = []; syncConfig(); document.getElementById('newSupplierName').value = ''; }
+    }
 
+    function addGift() {
+        const s = document.getElementById('belongSupplier').value, n = document.getElementById('newGiftName').value.trim();
+        if (s && n) { db[s].push({ name: n, rule: document.getElementById('newGiftRule').value, calcType: document.getElementById('newGiftCalcType').value }); syncConfig(); document.getElementById('newGiftName').value = ''; }
+    }
+
+    function syncConfig() {
+        fetch(G_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveConfig', data: db }) }).then(() => fetchData());
+    }
+
+    function fetchData() {
+        fetch(`${G_URL}?action=readAll`).then(r => r.json()).then(res => {
+            if (res.config) db = res.config; if (res.records) logs = res.records;
+            const sups = Object.keys(db);
+            ['supplierSelect', 'belongSupplier', 'regSupplierSelect'].forEach(id => {
+                const s = document.getElementById(id); s.innerHTML = '';
+                sups.forEach(k => { let o = document.createElement('option'); o.value = k; o.innerText = k; s.appendChild(o); });
+            });
+            updateGiftSelect('supplierSelect', 'giftSelect'); updateGiftSelect('regSupplierSelect', 'regGiftSelect');
+        });
+    }
 
     function renderLogs() {
-
-        const b = document.getElementById('logBody');
-
-        b.innerHTML = '';
-
-        history.forEach(h => { b.innerHTML += `<tr><td>${h.timestamp}</td><td>${h.giftName}</td><td>${h.count}</td><td>${h.user}</td></tr>`; });
-
+        const body = document.getElementById('recordsTableBody'); body.innerHTML = '';
+        logs.forEach(l => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${l.timestamp}</td><td>${l.supplier}</td><td>${l.giftName}</td><td>${l.startCode}</td><td>${l.endCode}</td><td>${l.count}</td><td>${l.user.split('@')[0]}</td>`;
+            body.appendChild(tr);
+        });
     }
 
-
-
-    function refreshStock() {
-
-        const gn = document.getElementById('g1').value;
-
-        const rec = history.find(h => h.giftName === gn);
-
-        document.getElementById('vCount').innerText = rec ? rec.count + ' 張' : '無庫存';
-
-        document.getElementById('vExp').innerText = rec ? rec.expiry : '-';
-
+    function loadQueryData() {
+        const s = document.getElementById('supplierSelect').value, gn = document.getElementById('giftSelect').value;
+        const last = logs.find(l => l.supplier === s && l.giftName === gn);
+        document.getElementById('infoGiftName').innerText = gn || '-';
+        document.getElementById('infoRange').innerText = last ? `${last.startCode} ~ ${last.endCode}` : '無資料';
+        document.getElementById('infoCount').innerText = last ? `${last.count} 張` : '-';
+        document.getElementById('infoExpiry').innerText = last ? last.expiry : '-';
     }
 
-
-
-    function addSup() {
-
-        const n = document.getElementById('newSup').value;
-
-        if(n) { dataMap[n] = []; saveConfig(); }
-
-    }
-
-
-
-    function addGiftRule() {
-
-        const s = document.getElementById('selSupForGift').value;
-
-        const n = document.getElementById('newGName').value;
-
-        const r = document.getElementById('newGRule').value;
-
-        if(s && n) { dataMap[s].push({ name: n, rule: r }); saveConfig(); }
-
-    }
-
-
-
-    function saveConfig() {
-
-        fetch(API, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'saveConfig', data: dataMap }) }).then(() => loadDB());
-
-    }
-
+    function hidePreview() { document.getElementById('recentRegisterSection').style.display = 'none'; }
+    function logout() { location.reload(); }
 </script>
-
 </body>
-
 </html>
