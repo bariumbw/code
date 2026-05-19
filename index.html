@@ -72,6 +72,7 @@
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
             box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+            border: none;
         }
         .btn-add-stock:hover {
             transform: translateY(-2px);
@@ -87,6 +88,7 @@
             background: linear-gradient(135deg, #2ecc71, #27ae60);
             color: white;
             box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
+            border: none;
         }
         .btn-save-config:hover {
             transform: translateY(-2px);
@@ -142,6 +144,7 @@
             padding: 15px;
             border-radius: 8px;
             border-left: 4px solid var(--primary-color);
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -156,7 +159,7 @@
         <button id="login-btn" class="btn" onclick="checkLogin()">登入</button>
     </section>
 
-    <!-- 管理面板 (預設隱藏) -->
+    <!-- 管理面板 -->
     <section id="admin-panel" class="hidden">
         <div class="header">
             <h3>券碼管理與登記</h3>
@@ -165,7 +168,7 @@
 
         <!-- 1. 當前庫存資訊 -->
         <div class="card">
-            <label>目前庫存狀態</label>
+            <label>目前配置與狀態</label>
             <div id="inventory-display">
                 載入中...
             </div>
@@ -198,8 +201,12 @@
                     <label>到期規則</label>
                     <select id="date_rule">
                         <option value="end_of_12m">12個月月底</option>
+                        <option value="end_of_13m">13個月月底</option>
+                        <option value="end_of_14m">14個月月底</option>
+                        <option value="end_of_15m">15個月月底</option>
+                        <option value="end_of_18m">18個月月底</option>
                         <option value="end_of_24m">24個月月底</option>
-                        <option value="365days">365天</option>
+                        <option value="365days">365日</option>
                     </select>
                 </div>
             </div>
@@ -221,13 +228,29 @@
 
 <script>
     // 核心設定
-    const G_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL"; // 請在此填入您的 GAS 連結
     const ADMIN_EMAIL = "support@bespoke-mall.com";
     const ADMIN_PW = "Admin888";
 
     let currentUser = null;
 
-    // 登入檢查
+    // 頁面加載時自動恢復配置
+    window.onload = function() {
+        const savedName = localStorage.getItem('wedding_item_name');
+        const savedRule = localStorage.getItem('wedding_date_rule');
+        const savedCalc = localStorage.getItem('wedding_calc_type');
+
+        if (savedName) {
+            document.getElementById('item_name').value = savedName;
+        }
+        if (savedRule) {
+            document.getElementById('date_rule').value = savedRule;
+        }
+        if (savedCalc) {
+            document.getElementById('calc_type').value = savedCalc;
+        }
+        updateInventoryDisplay();
+    };
+
     function checkLogin() {
         const email = document.getElementById('email').value;
         const pw = document.getElementById('password').value;
@@ -244,7 +267,7 @@
         document.getElementById('login-section').classList.add('hidden');
         document.getElementById('admin-panel').classList.remove('hidden');
         document.getElementById('user-display').innerText = `管理員: ${currentUser}`;
-        loadInventory();
+        updateInventoryDisplay();
     }
 
     function logout() {
@@ -254,15 +277,46 @@
         document.getElementById('password').value = "";
     }
 
-    // 載入庫存資訊 (模擬)
-    function loadInventory() {
+    // 更新顯示看板
+    function updateInventoryDisplay() {
+        const name = localStorage.getItem('wedding_item_name') || "未設定";
+        const rule = localStorage.getItem('wedding_date_rule') || "未設定";
         const display = document.getElementById('inventory-display');
+        
+        let ruleText = "";
+        const rulesMap = {
+            "end_of_12m": "12個月月底",
+            "end_of_13m": "13個月月底",
+            "end_of_14m": "14個月月底",
+            "end_of_15m": "15個月月底",
+            "end_of_18m": "18個月月底",
+            "end_of_24m": "24個月月底",
+            "365days": "365日"
+        };
+        
+        ruleText = rulesMap[rule] || rule;
+
         display.innerHTML = `
-            <strong>項目:</strong> <span id="display_item_name">未設定</span><br>
-            <strong>總量:</strong> 0<br>
-            <strong>最後 SN:</strong> --- <br>
-            <strong>最後有效期:</strong> ---
+            <strong>當前項目:</strong> ${name}<br>
+            <strong>預設到期規則:</strong> ${ruleText}<br>
+            <strong>目前庫存:</strong> 0 (需連接數據庫)
         `;
+    }
+
+    // 儲存配置到本地
+    function saveConfig() {
+        const name = document.getElementById('item_name').value;
+        const rule = document.getElementById('date_rule').value;
+        const calc = document.getElementById('calc_type').value;
+
+        if(!name) { alert("請輸入項目名稱"); return; }
+
+        localStorage.setItem('wedding_item_name', name);
+        localStorage.setItem('wedding_date_rule', rule);
+        localStorage.setItem('wedding_calc_type', calc);
+
+        updateInventoryDisplay();
+        alert("配置已儲存至本地瀏覽器");
     }
 
     // 處理入庫登記邏輯
@@ -280,15 +334,14 @@
         let qty = calculateQuantity(start, end, calcType);
         let expiryDate = calculateExpiry(rule);
 
-        const confirmMsg = `核對入庫資料：\n數量：${qty}\n首碼：${start}\n尾碼：${end}\n預計有效期：${expiryDate}\n\n確定執行？`;
+        const confirmMsg = `核對入庫資料：\n\n項目：${localStorage.getItem('wedding_item_name')}\n數量：${qty}\n首碼：${start}\n尾碼：${end}\n預計有效期：${expiryDate}\n\n確定執行新增？`;
         
         if (confirm(confirmMsg)) {
-            submitRecord(start, end, qty, expiryDate);
+            alert("新增成功！\n數量: " + qty + "\n到期日: " + expiryDate);
         }
     }
 
     function calculateQuantity(s, e, type) {
-        // 提取數字邏輯
         let numS = s.replace(/[^0-9]/g, '');
         let numE = e.replace(/[^0-9]/g, '');
         
@@ -308,23 +361,19 @@
         if (rule === '365days') {
             d.setDate(d.getDate() + 365);
         } else {
-            let months = rule === 'end_of_12m' ? 12 : 24;
+            const monthsMap = {
+                "end_of_12m": 12,
+                "end_of_13m": 13,
+                "end_of_14m": 14,
+                "end_of_15m": 15,
+                "end_of_18m": 18,
+                "end_of_24m": 24
+            };
+            let months = monthsMap[rule] || 12;
             d.setMonth(d.getMonth() + months + 1);
-            d.setDate(0); // 設定為該月最後一天
+            d.setDate(0); 
         }
         return d.toISOString().split('T')[0];
-    }
-
-    function submitRecord(s, e, q, d) {
-        console.log("提交中...", { s, e, q, d });
-        alert("新增成功 (測試模式)");
-    }
-
-    function saveConfig() {
-        const name = document.getElementById('item_name').value;
-        if(!name) { alert("請輸入項目名稱"); return; }
-        document.getElementById('display_item_name').innerText = name;
-        alert("禮券配置已更新");
     }
 
 </script>
