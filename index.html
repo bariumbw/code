@@ -343,9 +343,10 @@
         let d = new Date(today);
         if (rule === '365d') { d.setDate(d.getDate() + 365); return d.toISOString().split('T')[0]; }
         
-        // 確保計算規則正確跳至目標月份之最後一天
         let months = parseInt(rule) || 12;
-        return new Date(d.getFullYear(), d.getMonth() + months + 1, 0).toISOString().split('T')[0];
+        // 修正邏輯：先計算出目標月份，然後明確將日期設為該月的最後一天
+        let targetDate = new Date(d.getFullYear(), d.getMonth() + months + 1, 0);
+        return targetDate.toISOString().split('T')[0];
     }
 
     function handleLogin(e) {
@@ -355,7 +356,6 @@
         
         let loginSuccess = false;
 
-        // 嚴格比對帳號密碼
         if (emailInput === 'support@bespoke-mall.com' && codeInput === 'Admin888') {
             userEmail = emailInput;
             userDisplayName = 'MALL';
