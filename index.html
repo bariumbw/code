@@ -341,10 +341,14 @@
 
     function calculateFinalExpiry(today, rule) {
         let d = new Date(today);
-        if (rule === '365d') { d.setDate(d.getDate() + 365); return d.toISOString().split('T')[0]; }
+        if (rule === '365d') { 
+            d.setDate(d.getDate() + 365); 
+            return d.toISOString().split('T')[0]; 
+        }
         
-        let months = parseInt(rule) || 12;
-        // 修正邏輯：先計算出目標月份，然後明確將日期設為該月的最後一天
+        // 修正邏輯：明確取得目標月份的最後一天
+        let months = parseInt(rule.replace('m_end', ''));
+        // 設定為目標月份的下個月第 0 天 (即該月最後一天)
         let targetDate = new Date(d.getFullYear(), d.getMonth() + months + 1, 0);
         return targetDate.toISOString().split('T')[0];
     }
