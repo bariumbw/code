@@ -346,11 +346,14 @@
             return d.toISOString().split('T')[0]; 
         }
         
-        // 修正邏輯：明確取得目標月份的最後一天
+        // 修正：明確使用本地時間組裝日期字串，防止 ISO 轉換造成的誤差
         let months = parseInt(rule.replace('m_end', ''));
-        // 設定為目標月份的下個月第 0 天 (即該月最後一天)
-        let targetDate = new Date(d.getFullYear(), d.getMonth() + months + 1, 0);
-        return targetDate.toISOString().split('T')[0];
+        let target = new Date(d.getFullYear(), d.getMonth() + months + 1, 0);
+        
+        let y = target.getFullYear();
+        let m = (target.getMonth() + 1).toString().padStart(2, '0');
+        let day = target.getDate().toString().padStart(2, '0');
+        return `${y}-${m}-${day}`;
     }
 
     function handleLogin(e) {
